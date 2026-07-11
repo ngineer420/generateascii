@@ -68,10 +68,4 @@ const FONT_CATALOGUE = [
   { file: "Runic",          category: "Novelty" },
 ];
 
-/* Shown in the live gallery on first load, before the user searches/filters. */
-const GALLERY_DEFAULT_FONTS = [
-  "Standard", "ANSI Shadow", "Big", "Slant", "Doom", "Block",
-  "Small Slant", "Larry 3D", "Ghost", "Graffiti", "Star Wars", "Colossal",
-];
-
 const DEFAULT_FONT = "Standard";
