@@ -163,7 +163,6 @@
     const output = document.getElementById("text-output");
     const outputWrap = document.getElementById("text-output-wrap");
     const galleryEl = document.getElementById("font-gallery");
-    const galleryFilter = document.getElementById("gallery-filter");
     const copyFlash = document.getElementById("text-copy-flash");
 
     let colorMode = "solid"; // "solid" | "rainbow"
@@ -263,7 +262,7 @@
     }
 
     const debouncedMainPreview = debounce(updateMainPreview, 120);
-    const debouncedGallery = debounce(() => renderGallery(galleryFilter.value), 150);
+    const debouncedGallery = debounce(renderGallery, 150);
 
     textInput.addEventListener("input", () => {
       debouncedMainPreview();
@@ -315,18 +314,11 @@
       });
     }
 
-    async function renderGallery(filter) {
-      const q = (filter || "").trim().toLowerCase();
-      const list = q
-        ? FONT_CATALOGUE.filter(
-            (f) => f.file.toLowerCase().includes(q) || f.category.toLowerCase().includes(q)
-          )
-        : FONT_CATALOGUE.filter((f) => GALLERY_DEFAULT_FONTS.includes(f.file));
-
+    async function renderGallery() {
       galleryEl.innerHTML = "";
       const text = currentText();
 
-      list.forEach((f) => {
+      FONT_CATALOGUE.forEach((f) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "gallery-item";
@@ -353,13 +345,7 @@
             btn.querySelector("pre").textContent = "(failed to load)";
           });
       });
-
-      if (list.length === 0) {
-        galleryEl.innerHTML = `<p style="color:var(--text-faint);font-size:13px;">No fonts match "${filter}".</p>`;
-      }
     }
-
-    galleryFilter.addEventListener("input", () => renderGallery(galleryFilter.value));
 
     /* ---- export ---- */
 
@@ -427,7 +413,7 @@
     }
 
     /* ---- init ---- */
-    renderGallery("");
+    renderGallery();
     updateMainPreview();
   })();
 
