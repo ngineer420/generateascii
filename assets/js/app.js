@@ -31,6 +31,31 @@
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 
+  /* ============================= session persistence =============================
+     sessionStorage (not localStorage) so an accidental reload keeps your work, but
+     closing the tab starts fresh — matches how people expect "undo my reload", not
+     "remember this forever". */
+
+  const SESSION_PREFIX = "ga:";
+
+  function saveSession(key, value) {
+    try {
+      sessionStorage.setItem(SESSION_PREFIX + key, JSON.stringify(value));
+      return true;
+    } catch {
+      return false; // private browsing / quota exceeded — degrade silently
+    }
+  }
+
+  function loadSession(key) {
+    try {
+      const raw = sessionStorage.getItem(SESSION_PREFIX + key);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
   async function copyText(text, flashEl) {
     try {
       await navigator.clipboard.writeText(text);
@@ -73,7 +98,7 @@
       "tab-image": document.getElementById("panel-image"),
     };
 
-    function select(tab) {
+    function select(tab, { focus = true } = {}) {
       tabs.forEach((t) => {
         const active = t === tab;
         t.setAttribute("aria-selected", String(active));
@@ -81,7 +106,8 @@
         panels[t.id].hidden = !active;
         panels[t.id].classList.toggle("active", active);
       });
-      tab.focus();
+      saveSession("tab", tab.id === "tab-image" ? "image" : "text");
+      if (focus) tab.focus();
     }
 
     tabs.forEach((tab, i) => {
@@ -93,6 +119,8 @@
         if (e.key === "End") select(tabs[tabs.length - 1]);
       });
     });
+
+    if (loadSession("tab") === "image") select(tabs[1], { focus: false });
   })();
 
   document.getElementById("year").textContent = new Date().getFullYear();
@@ -159,6 +187,36 @@
     });
     fontSelect.value = DEFAULT_FONT;
 
+    function persistTextState() {
+      saveSession("text", {
+        text: textInput.value,
+        font: fontSelect.value,
+        layout: layoutSelect.value,
+        colorMode,
+        textColor: textColorInput.value,
+        bgMode,
+      });
+    }
+
+    // Restore last session's selections, if any, before the first render.
+    (function restoreTextState() {
+      const saved = loadSession("text");
+      if (!saved) return;
+      if (typeof saved.text === "string") textInput.value = saved.text;
+      if (saved.font) fontSelect.value = saved.font;
+      if (saved.layout) layoutSelect.value = saved.layout;
+      if (saved.textColor) textColorInput.value = saved.textColor;
+      if (saved.colorMode) {
+        colorMode = saved.colorMode;
+        modeSolidBtn.setAttribute("aria-pressed", String(colorMode === "solid"));
+        modeRainbowBtn.setAttribute("aria-pressed", String(colorMode === "rainbow"));
+      }
+      if (saved.bgMode) {
+        bgMode = saved.bgMode;
+        bgButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bg === bgMode)));
+      }
+    })();
+
     function currentText() {
       return (textInput.value || "").slice(0, 200) || "ASCII";
     }
@@ -210,31 +268,42 @@
     textInput.addEventListener("input", () => {
       debouncedMainPreview();
       debouncedGallery();
+      persistTextState();
     });
     fontSelect.addEventListener("change", () => {
       updateMainPreview();
       highlightGallerySelection();
+      persistTextState();
     });
-    layoutSelect.addEventListener("change", updateMainPreview);
-    textColorInput.addEventListener("input", applyColorStyle);
+    layoutSelect.addEventListener("change", () => {
+      updateMainPreview();
+      persistTextState();
+    });
+    textColorInput.addEventListener("input", () => {
+      applyColorStyle();
+      persistTextState();
+    });
 
     modeSolidBtn.addEventListener("click", () => {
       colorMode = "solid";
       modeSolidBtn.setAttribute("aria-pressed", "true");
       modeRainbowBtn.setAttribute("aria-pressed", "false");
       applyColorStyle();
+      persistTextState();
     });
     modeRainbowBtn.addEventListener("click", () => {
       colorMode = "rainbow";
       modeRainbowBtn.setAttribute("aria-pressed", "true");
       modeSolidBtn.setAttribute("aria-pressed", "false");
       applyColorStyle();
+      persistTextState();
     });
     bgButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
         bgMode = btn.dataset.bg;
         bgButtons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
         applyBgStyle();
+        persistTextState();
       });
     });
 
@@ -406,10 +475,34 @@
     let colorMode = "mono"; // "mono" | "color"
     let bgMode = "dark"; // "dark" | "light"
     let lastAsciiText = "";
+    let lastImageDataUrl = null;
+    let lastImageMeta = null;
 
     function currentRamp() {
       if (rampSelect.value === "custom") return customRampInput.value || RAMPS.standard;
       return RAMPS[rampSelect.value] || RAMPS.standard;
+    }
+
+    function persistImageState() {
+      const state = {
+        width: widthSlider.value,
+        ramp: rampSelect.value,
+        customRamp: customRampInput.value,
+        brightness: brightnessSlider.value,
+        contrast: contrastSlider.value,
+        gamma: gammaSlider.value,
+        invert: invertCheckbox.checked,
+        colorMode,
+        monoColor: monoColorInput.value,
+        bgMode,
+        imageDataUrl: lastImageDataUrl,
+        imageMeta: lastImageMeta,
+      };
+      // The embedded image can push this over a browser's sessionStorage quota;
+      // if so, fall back to persisting just the control settings.
+      if (!saveSession("image", state)) {
+        saveSession("image", { ...state, imageDataUrl: null, imageMeta: null });
+      }
     }
 
     // Declared early (computeAndRender is a hoisted function declaration) because several
@@ -458,6 +551,9 @@
       emptyMsg.style.display = "";
       outputWrap.classList.add("is-empty");
       lastAsciiText = "";
+      lastImageDataUrl = null;
+      lastImageMeta = null;
+      persistImageState();
     });
 
     function handleFile(file) {
@@ -473,6 +569,15 @@
       };
       img.onerror = () => URL.revokeObjectURL(url);
       img.src = url;
+
+      // Also read as a data URL so the image survives an accidental reload this session.
+      const reader = new FileReader();
+      reader.onload = () => {
+        lastImageDataUrl = reader.result;
+        lastImageMeta = { name: file.name || "pasted image" };
+        persistImageState();
+      };
+      reader.readAsDataURL(file);
     }
 
     /* ---- controls ---- */
@@ -480,26 +585,40 @@
     widthSlider.addEventListener("input", () => {
       widthVal.textContent = widthSlider.value;
       scheduleRender();
+      persistImageState();
     });
     rampSelect.addEventListener("change", () => {
       customRampField.style.display = rampSelect.value === "custom" ? "" : "none";
       scheduleRender();
+      persistImageState();
     });
-    customRampInput.addEventListener("input", scheduleRender);
+    customRampInput.addEventListener("input", () => {
+      scheduleRender();
+      persistImageState();
+    });
     brightnessSlider.addEventListener("input", () => {
       brightnessVal.textContent = brightnessSlider.value;
       scheduleRender();
+      persistImageState();
     });
     contrastSlider.addEventListener("input", () => {
       contrastVal.textContent = contrastSlider.value;
       scheduleRender();
+      persistImageState();
     });
     gammaSlider.addEventListener("input", () => {
       gammaVal.textContent = parseFloat(gammaSlider.value).toFixed(1);
       scheduleRender();
+      persistImageState();
     });
-    invertCheckbox.addEventListener("change", scheduleRender);
-    monoColorInput.addEventListener("input", scheduleRender);
+    invertCheckbox.addEventListener("change", () => {
+      scheduleRender();
+      persistImageState();
+    });
+    monoColorInput.addEventListener("input", () => {
+      scheduleRender();
+      persistImageState();
+    });
 
     colorOptBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -507,6 +626,7 @@
         colorOptBtns.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
         monoColorField.style.display = colorMode === "mono" ? "" : "none";
         scheduleRender();
+        persistImageState();
       });
     });
     bgOptBtns.forEach((btn) => {
@@ -514,8 +634,61 @@
         bgMode = btn.dataset.bg;
         bgOptBtns.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
         scheduleRender();
+        persistImageState();
       });
     });
+
+    // Restore last session's controls (and image, if it fit in storage) before first render.
+    (function restoreImageState() {
+      const saved = loadSession("image");
+      if (!saved) return;
+      if (saved.width) {
+        widthSlider.value = saved.width;
+        widthVal.textContent = saved.width;
+      }
+      if (saved.ramp) {
+        rampSelect.value = saved.ramp;
+        customRampField.style.display = saved.ramp === "custom" ? "" : "none";
+      }
+      if (typeof saved.customRamp === "string") customRampInput.value = saved.customRamp;
+      if (saved.brightness !== undefined) {
+        brightnessSlider.value = saved.brightness;
+        brightnessVal.textContent = saved.brightness;
+      }
+      if (saved.contrast !== undefined) {
+        contrastSlider.value = saved.contrast;
+        contrastVal.textContent = saved.contrast;
+      }
+      if (saved.gamma !== undefined) {
+        gammaSlider.value = saved.gamma;
+        gammaVal.textContent = parseFloat(saved.gamma).toFixed(1);
+      }
+      if (saved.invert !== undefined) invertCheckbox.checked = saved.invert;
+      if (saved.colorMode) {
+        colorMode = saved.colorMode;
+        colorOptBtns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === colorMode)));
+        monoColorField.style.display = colorMode === "mono" ? "" : "none";
+      }
+      if (saved.monoColor) monoColorInput.value = saved.monoColor;
+      if (saved.bgMode) {
+        bgMode = saved.bgMode;
+        bgOptBtns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bg === bgMode)));
+      }
+      if (saved.imageDataUrl) {
+        lastImageDataUrl = saved.imageDataUrl;
+        lastImageMeta = saved.imageMeta || null;
+        const img = new Image();
+        img.onload = () => {
+          sourceImage = img;
+          sourceThumbImg.src = saved.imageDataUrl;
+          const name = (saved.imageMeta && saved.imageMeta.name) || "restored image";
+          sourceThumbMeta.textContent = `${name} — ${img.naturalWidth}×${img.naturalHeight}`;
+          sourceThumb.classList.add("show");
+          scheduleRender();
+        };
+        img.src = saved.imageDataUrl;
+      }
+    })();
 
     /* ---- core pipeline ---- */
 
