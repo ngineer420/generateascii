@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generate ASCII — Free Text &amp; Image to ASCII Art Generator</title>
+<meta name="description" content="Turn text into ASCII art banners with 59 fonts, or convert any image or photo into ASCII art — free, instant, and fully processed in your browser. Nothing is uploaded.">
+<link rel="canonical" href="https://generateascii.com/">
+<meta name="theme-color" content="#0b0d0f">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Generate ASCII — Free Text &amp; Image to ASCII Art Generator">
+<meta property="og:description" content="Turn text into ASCII art banners with 59 fonts, or convert any image into ASCII art. Free, instant, runs entirely in your browser.">
+<meta property="og:url" content="https://generateascii.com/">
+<meta property="og:image" content="https://generateascii.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Generate ASCII — Free Text &amp; Image to ASCII Art Generator">
+<meta name="twitter:description" content="Turn text into ASCII art banners with 59 fonts, or convert any image into ASCII art. Free, instant, runs entirely in your browser.">
+<meta name="twitter:image" content="https://generateascii.com/assets/og-image.png">
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Generate ASCII",
+  "url": "https://generateascii.com/",
+  "applicationCategory": "DesignApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free browser-based ASCII art generator: convert text into ASCII banner fonts or convert images into ASCII art."
+}
+</script>
+
+<!--
+  Ad monetization (Google AdSense placeholder)
+  ---------------------------------------------
+  1. Get approved at https://adsense.google.com using this site's live URL.
+  2. Replace ca-pub-XXXXXXXXXXXXXXXX below with your publisher ID.
+  3. Uncomment the <script> tag.
+  4. In assets/js/ads.js, replace the data-ad-slot values with your real ad unit slot IDs.
+  Until then, .ad-slot elements render as empty placeholders and do nothing.
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+-->
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="generateascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+      <span class="brand-tag">text &amp; image → ASCII art</span>
+    </a>
+    <div class="header-actions">
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark/light theme" title="Toggle theme">◐</button>
+    </div>
+  </div>
+</header>
+
+<div class="ad-slot ad-slot--leaderboard" id="ad-top" aria-hidden="true"></div>
+
+<main id="main">
+  <div class="hero">
+    <h1>Free ASCII Art Generator</h1>
+    <p>Convert text into ASCII banner art, or turn any image into ASCII — instantly, free, no sign-up.</p>
+    <p class="trust-line">Runs 100% in your browser<span class="dot">•</span>Nothing is uploaded to a server<span class="dot">•</span>59 fonts</p>
+  </div>
+
+  <div role="tablist" class="tabbar" aria-label="ASCII generator mode">
+    <button role="tab" id="tab-text" aria-controls="panel-text" aria-selected="true" class="tab-btn" type="button">Text to ASCII</button>
+    <button role="tab" id="tab-image" aria-controls="panel-image" aria-selected="false" class="tab-btn" type="button" tabindex="-1">Image to ASCII</button>
+  </div>
+
+  <!-- ===================== TEXT TO ASCII ===================== -->
+  <section role="tabpanel" id="panel-text" aria-labelledby="tab-text" class="tab-panel active">
+    <div class="tool-grid">
+      <div class="controls-col">
+        <div class="panel">
+          <h2>Text</h2>
+          <div class="controls-stack">
+            <div class="field">
+              <label for="text-input">Your text</label>
+              <textarea id="text-input" rows="2" maxlength="200" placeholder="Type something...">HELLO</textarea>
+            </div>
+            <div class="field">
+              <label for="font-select">Font</label>
+              <select id="font-select"></select>
+            </div>
+            <div class="field">
+              <label for="layout-select">Layout</label>
+              <select id="layout-select">
+                <option value="default">Default</option>
+                <option value="full">Full width</option>
+                <option value="fitted">Fitted</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Text color</label>
+              <div class="field-row">
+                <input type="color" id="text-color" value="#39ff88">
+                <div class="segmented" role="group" aria-label="Color mode">
+                  <button type="button" id="mode-solid" aria-pressed="true">Solid</button>
+                  <button type="button" id="mode-rainbow" aria-pressed="false">Rainbow</button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Background</label>
+              <div class="segmented" role="group" aria-label="Background">
+                <button type="button" class="bg-opt" data-bg="dark" aria-pressed="true">Dark</button>
+                <button type="button" class="bg-opt" data-bg="light" aria-pressed="false">Light</button>
+                <button type="button" class="bg-opt" data-bg="transparent" aria-pressed="false">Transparent</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="gallery-head">
+            <h2>Font gallery</h2>
+          </div>
+          <div class="field">
+            <label for="gallery-filter" class="visually-hidden">Filter fonts</label>
+            <input type="text" id="gallery-filter" placeholder="Filter fonts (e.g. 3d, small, script)...">
+          </div>
+          <div class="gallery" id="font-gallery" aria-label="Font previews, click to select"></div>
+        </div>
+      </div>
+
+      <div class="output-col">
+        <div class="panel">
+          <div class="output-toolbar">
+            <h2 style="margin:0;">Preview</h2>
+            <div class="btn-row">
+              <button type="button" id="text-copy" class="icon-btn">Copy</button>
+              <button type="button" id="text-download-txt" class="icon-btn">.txt</button>
+              <button type="button" id="text-download-png" class="icon-btn">.png</button>
+            </div>
+          </div>
+          <div class="ascii-surface" id="text-output-wrap">
+            <pre id="text-output" tabindex="0"></pre>
+          </div>
+          <span class="copy-flash" id="text-copy-flash">Copied!</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== IMAGE TO ASCII ===================== -->
+  <section role="tabpanel" id="panel-image" aria-labelledby="tab-image" class="tab-panel" hidden>
+    <div class="tool-grid">
+      <div class="controls-col">
+        <div class="panel">
+          <h2>Image</h2>
+          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload an image">
+            <strong>Drop an image here</strong><br>
+            or click to browse, or paste from clipboard
+            <div class="hint">JPG, PNG, GIF, WebP — processed locally, never uploaded</div>
+            <input type="file" id="file-input" accept="image/*" class="visually-hidden">
+          </div>
+          <div class="source-thumb" id="source-thumb">
+            <img id="source-thumb-img" alt="">
+            <div class="meta" id="source-thumb-meta"></div>
+            <button type="button" id="source-clear" class="icon-btn" style="margin-left:auto;">✕</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Adjust</h2>
+          <div class="controls-stack">
+            <div class="field">
+              <div class="range-label"><span>Width (columns)</span><span id="img-width-val">120</span></div>
+              <input type="range" id="img-width" min="40" max="300" value="120" step="2">
+            </div>
+            <div class="field">
+              <label for="img-ramp">Character set</label>
+              <select id="img-ramp">
+                <option value="standard">Standard</option>
+                <option value="detailed">Detailed</option>
+                <option value="blocks">Blocks ░▒▓█</option>
+                <option value="binary">Binary 01</option>
+                <option value="custom">Custom…</option>
+              </select>
+            </div>
+            <div class="field" id="img-custom-ramp-field" style="display:none;">
+              <label for="img-custom-ramp">Custom ramp (light → dark)</label>
+              <input type="text" id="img-custom-ramp" value=" .:-=+*#%@">
+            </div>
+            <div class="field">
+              <div class="range-label"><span>Brightness</span><span id="img-brightness-val">0</span></div>
+              <input type="range" id="img-brightness" min="-100" max="100" value="0" step="1">
+            </div>
+            <div class="field">
+              <div class="range-label"><span>Contrast</span><span id="img-contrast-val">0</span></div>
+              <input type="range" id="img-contrast" min="-100" max="100" value="0" step="1">
+            </div>
+            <div class="field">
+              <div class="range-label"><span>Gamma</span><span id="img-gamma-val">1.0</span></div>
+              <input type="range" id="img-gamma" min="0.2" max="2.5" value="1" step="0.1">
+            </div>
+            <div class="field field-row">
+              <input type="checkbox" id="img-invert" style="width:auto;">
+              <label for="img-invert" style="margin:0;">Invert</label>
+            </div>
+            <div class="field">
+              <label>Color mode</label>
+              <div class="segmented" role="group" aria-label="Color mode">
+                <button type="button" class="img-color-opt" data-mode="mono" aria-pressed="true">Monochrome</button>
+                <button type="button" class="img-color-opt" data-mode="color" aria-pressed="false">Full color</button>
+              </div>
+            </div>
+            <div class="field" id="img-mono-color-field">
+              <label for="img-mono-color">Text color</label>
+              <input type="color" id="img-mono-color" value="#39ff88">
+            </div>
+            <div class="field">
+              <label>Background</label>
+              <div class="segmented" role="group" aria-label="Output background">
+                <button type="button" class="img-bg-opt" data-bg="dark" aria-pressed="true">Dark</button>
+                <button type="button" class="img-bg-opt" data-bg="light" aria-pressed="false">Light</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-col">
+        <div class="panel">
+          <div class="output-toolbar">
+            <h2 style="margin:0;">Preview</h2>
+            <div class="btn-row">
+              <button type="button" id="img-copy" class="icon-btn">Copy</button>
+              <button type="button" id="img-download-txt" class="icon-btn">.txt</button>
+              <button type="button" id="img-download-png" class="icon-btn">.png</button>
+            </div>
+          </div>
+          <div class="ascii-surface is-empty" id="img-output-wrap">
+            <span id="img-empty-msg">Upload an image to see it converted to ASCII art here.</span>
+            <canvas id="img-canvas" style="display:none;"></canvas>
+          </div>
+          <span class="copy-flash" id="img-copy-flash">Copied!</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ad-slot ad-slot--inline" id="ad-inline" aria-hidden="true"></div>
+
+  <section class="container-narrow" style="padding-top:0;">
+    <h2 style="margin-top:0;">About this tool</h2>
+    <p>generateascii.com is a free ASCII art generator with two tools in one: a <strong>text-to-ASCII banner generator</strong> built on 59 classic FIGlet fonts, and an <strong>image-to-ASCII converter</strong> that turns photos into character art using canvas-based luminance mapping. Both run entirely client-side — your images and text never leave your browser or touch a server, so there's no upload wait and nothing to worry about privacy-wise.</p>
+    <p>Use it for terminal banners, README headers, Discord/Slack art, git commit art, CLI tool splash screens, or just for fun. Copy the output straight to your clipboard, or export as a .txt file or a rendered .png image.</p>
+  </section>
+</main>
+
+<div class="ad-slot ad-slot--footer" id="ad-footer" aria-hidden="true"></div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>© <span id="year"></span> generateascii.com</div>
+    <div class="footer-links">
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="https://github.com/patorjk/figlet.js" target="_blank" rel="noopener">Fonts via figlet.js</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/figlet.min.js"></script>
+<script src="/assets/js/fonts-manifest.js"></script>
+<script src="/assets/js/app.js"></script>
+</body>
+</html>
