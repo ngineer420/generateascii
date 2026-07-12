@@ -165,6 +165,7 @@
     const outputWrap = document.getElementById("text-output-wrap");
     const galleryEl = document.getElementById("font-gallery");
     const copyFlash = document.getElementById("text-copy-flash");
+    const editHint = document.getElementById("text-edit-hint");
 
     let colorMode = "solid"; // "solid" | "rainbow"
     let bgMode = "dark"; // "dark" | "light" | "transparent"
@@ -250,10 +251,45 @@
       } catch (err) {
         output.textContent = `Couldn't render that text in "${font}".\nTry a shorter phrase or a different font.`;
       }
+      output.appendChild(caret); // textContent wiped it; caret holds no text, so copy/export are unaffected
       applyColorStyle();
       applyBgStyle();
       applySizeStyle();
     }
+
+    /* ---- the preview is the input ----
+       #text-input is a visually hidden textarea: clicking the art focuses it,
+       keystrokes re-render the art, and a block caret blinks after the art. */
+
+    const caret = document.createElement("span");
+    caret.className = "ascii-caret";
+    caret.setAttribute("aria-hidden", "true");
+
+    const EDIT_HINT_DEFAULT = editHint ? editHint.textContent : "";
+
+    function updateEditHint() {
+      if (!editHint) return;
+      const editing = document.activeElement === textInput;
+      editHint.textContent = editing ? textInput.value || "(empty)" : EDIT_HINT_DEFAULT;
+    }
+
+    outputWrap.addEventListener("click", () => {
+      // Don't steal focus from a manual drag-selection of the art.
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) return;
+      textInput.focus();
+    });
+    textInput.addEventListener("focus", () => {
+      outputWrap.classList.add("is-editing");
+      updateEditHint();
+    });
+    textInput.addEventListener("blur", () => {
+      outputWrap.classList.remove("is-editing");
+      updateEditHint();
+    });
+    textInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") textInput.blur();
+    });
 
     const debouncedMainPreview = debounce(updateMainPreview, 120);
     const debouncedGallery = debounce(renderGallery, 150);
@@ -261,6 +297,7 @@
     textInput.addEventListener("input", () => {
       debouncedMainPreview();
       debouncedGallery();
+      updateEditHint();
       persistTextState();
     });
     layoutSelect.addEventListener("change", () => {
@@ -329,7 +366,7 @@
         btn.className = "gallery-item";
         btn.dataset.font = f.file;
         btn.setAttribute("aria-pressed", String(f.file === selectedFont));
-        btn.innerHTML = `<span class="font-name">${f.file}</span><pre>Loading…</pre>`;
+        btn.innerHTML = `<pre>Loading…</pre><span class="font-name">${f.file}</span>`;
         btn.addEventListener("click", () => {
           selectedFont = f.file;
           updateMainPreview();
@@ -418,9 +455,21 @@
       canvas.toBlob((blob) => download("ascii-art.png", blob), "image/png");
     }
 
+    // Bring the restored session's font into view in the scrollable list,
+    // without scrollIntoView (which could also yank the page itself).
+    function scrollGalleryToSelection() {
+      const sel = galleryEl.querySelector('.gallery-item[aria-pressed="true"]');
+      if (!sel) return;
+      const top = sel.offsetTop - galleryEl.offsetTop;
+      const above = top < galleryEl.scrollTop;
+      const below = top + sel.offsetHeight > galleryEl.scrollTop + galleryEl.clientHeight;
+      if (above || below) galleryEl.scrollTop = Math.max(0, top - 12);
+    }
+
     /* ---- init ---- */
     renderGallery();
     updateMainPreview();
+    requestAnimationFrame(scrollGalleryToSelection);
   })();
 
   /* ============================= IMAGE TO ASCII ============================= */
