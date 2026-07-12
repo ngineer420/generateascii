@@ -82,23 +82,15 @@
           <div class="ascii-surface ascii-surface--editable" id="text-output-wrap">
             <pre id="text-output" aria-hidden="true"></pre>
             <label for="text-input" class="visually-hidden">Your text</label>
-            <textarea id="text-input" class="ghost-input" rows="1" maxlength="200" autocomplete="off" spellcheck="false">HELLO</textarea>
+            <textarea id="text-input" class="ghost-input" rows="1" maxlength="200" autocomplete="off" spellcheck="false"></textarea>
           </div>
           <span class="copy-flash" id="text-copy-flash">Copied!</span>
         </div>
 
         <div class="panel">
           <h2>Style</h2>
-          <div class="controls-stack controls-stack--row">
-            <div class="field">
-              <label for="layout-select">Layout</label>
-              <select id="layout-select">
-                <option value="default">Default</option>
-                <option value="full">Full width</option>
-                <option value="fitted">Fitted</option>
-              </select>
-            </div>
-            <div class="field">
+          <div class="style-controls">
+            <div class="field field--size">
               <div class="range-label"><span>Size</span><span id="text-size-val">13px</span></div>
               <input type="range" id="text-size" min="8" max="32" value="13" step="1">
             </div>
@@ -119,6 +111,14 @@
                 <button type="button" class="bg-opt" data-bg="light" aria-pressed="false">Light</button>
                 <button type="button" class="bg-opt" data-bg="transparent" aria-pressed="false">Transparent</button>
               </div>
+            </div>
+            <div class="field field--layout">
+              <label for="layout-select">Layout</label>
+              <select id="layout-select">
+                <option value="default">Default</option>
+                <option value="full">Full width</option>
+                <option value="fitted">Fitted</option>
+              </select>
             </div>
           </div>
         </div>

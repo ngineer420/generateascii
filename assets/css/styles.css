@@ -229,6 +229,9 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 20px 60px; }
   grid-template-columns: 1fr;
   gap: 20px;
 }
+/* Grid items default to min-width:auto, so wide `white-space: pre` art would
+   stretch the whole column past the viewport instead of scrolling inside it. */
+.text-main-col, .text-side-col { min-width: 0; }
 @media (min-width: 900px) {
   .text-tool-grid { grid-template-columns: minmax(0, 1fr) 320px; }
   .text-side-col { position: relative; }
@@ -270,6 +273,21 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 20px 60px; }
 @media (min-width: 900px) {
   .controls-stack--row { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* Style panel (text tab): one wrapping row where each control takes its
+   natural width and the size slider soaks up the slack, instead of four
+   forced-equal columns full of dead space. */
+.style-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 28px;
+}
+.style-controls .field { margin-bottom: 0; }
+/* Size gets a full-width row of its own (a slider earns the span); the other
+   three share the second row, with Layout growing to close out the line. */
+.style-controls .field--size { flex: 1 1 100%; }
+.style-controls .field--layout { flex: 1 1 150px; max-width: 240px; }
 
 fieldset { border: none; padding: 0; margin: 0 0 14px; }
 fieldset legend { padding: 0; }
@@ -361,10 +379,6 @@ fieldset legend { padding: 0; }
   resize: none;
   pointer-events: none;
 }
-/* Sample art shown when the input is empty: visibly a placeholder, and it
-   vanishes as soon as you click in to type (the input holds no real text). */
-#text-output.is-placeholder { opacity: .4; }
-
 .ascii-caret { display: none; }
 .is-editing .ascii-caret {
   display: inline-block;
