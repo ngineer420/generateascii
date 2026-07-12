@@ -460,6 +460,14 @@
           updateMainPreview();
           highlightGallerySelection();
           persistTextState();
+          // Picking a font in fullscreen means "that one" — drop back to the
+          // sidebar and bring the chosen font into view there.
+          if (fontListPanel.classList.contains("is-fullscreen")) {
+            setGalleryFullscreen(false);
+            // Double rAF: let the fullscreen-exit refit (rAF in
+            // setGalleryFullscreen) resize tiles before computing offsets.
+            requestAnimationFrame(() => requestAnimationFrame(scrollGalleryToSelection));
+          }
         });
         galleryEl.appendChild(btn);
 
