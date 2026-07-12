@@ -154,7 +154,6 @@
 
   (function textTool() {
     const textInput = document.getElementById("text-input");
-    const fontSelect = document.getElementById("font-select");
     const layoutSelect = document.getElementById("layout-select");
     const textColorInput = document.getElementById("text-color");
     const modeSolidBtn = document.getElementById("mode-solid");
@@ -167,29 +166,12 @@
 
     let colorMode = "solid"; // "solid" | "rainbow"
     let bgMode = "dark"; // "dark" | "light" | "transparent"
-
-    // Populate font <select>, grouped by category, in catalogue order.
-    const categories = [];
-    FONT_CATALOGUE.forEach((f) => {
-      if (!categories.includes(f.category)) categories.push(f.category);
-    });
-    categories.forEach((cat) => {
-      const group = document.createElement("optgroup");
-      group.label = cat;
-      FONT_CATALOGUE.filter((f) => f.category === cat).forEach((f) => {
-        const opt = document.createElement("option");
-        opt.value = f.file;
-        opt.textContent = f.file;
-        group.appendChild(opt);
-      });
-      fontSelect.appendChild(group);
-    });
-    fontSelect.value = DEFAULT_FONT;
+    let selectedFont = DEFAULT_FONT;
 
     function persistTextState() {
       saveSession("text", {
         text: textInput.value,
-        font: fontSelect.value,
+        font: selectedFont,
         layout: layoutSelect.value,
         colorMode,
         textColor: textColorInput.value,
@@ -202,7 +184,7 @@
       const saved = loadSession("text");
       if (!saved) return;
       if (typeof saved.text === "string") textInput.value = saved.text;
-      if (saved.font) fontSelect.value = saved.font;
+      if (saved.font) selectedFont = saved.font;
       if (saved.layout) layoutSelect.value = saved.layout;
       if (saved.textColor) textColorInput.value = saved.textColor;
       if (saved.colorMode) {
@@ -249,7 +231,7 @@
 
     async function updateMainPreview() {
       const text = currentText();
-      const font = fontSelect.value || DEFAULT_FONT;
+      const font = selectedFont || DEFAULT_FONT;
       const layout = layoutSelect.value;
       try {
         await ensureFont(font);
@@ -267,11 +249,6 @@
     textInput.addEventListener("input", () => {
       debouncedMainPreview();
       debouncedGallery();
-      persistTextState();
-    });
-    fontSelect.addEventListener("change", () => {
-      updateMainPreview();
-      highlightGallerySelection();
       persistTextState();
     });
     layoutSelect.addEventListener("change", () => {
@@ -309,26 +286,38 @@
     /* ---- gallery ---- */
 
     function highlightGallerySelection() {
-      Array.from(galleryEl.children).forEach((item) => {
-        item.setAttribute("aria-pressed", String(item.dataset.font === fontSelect.value));
+      Array.from(galleryEl.querySelectorAll(".gallery-item")).forEach((item) => {
+        item.setAttribute("aria-pressed", String(item.dataset.font === selectedFont));
       });
     }
 
+    // Grouped by category, in catalogue order — mirrors how fonts used to be
+    // organized under the (now-removed) font <select>'s optgroups.
     async function renderGallery() {
       galleryEl.innerHTML = "";
       const text = currentText();
+      let lastCategory = null;
 
       FONT_CATALOGUE.forEach((f) => {
+        if (f.category !== lastCategory) {
+          lastCategory = f.category;
+          const heading = document.createElement("div");
+          heading.className = "gallery-category";
+          heading.textContent = f.category;
+          galleryEl.appendChild(heading);
+        }
+
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "gallery-item";
         btn.dataset.font = f.file;
-        btn.setAttribute("aria-pressed", String(f.file === fontSelect.value));
+        btn.setAttribute("aria-pressed", String(f.file === selectedFont));
         btn.innerHTML = `<span class="font-name">${f.file}</span><pre>Loading…</pre>`;
         btn.addEventListener("click", () => {
-          fontSelect.value = f.file;
+          selectedFont = f.file;
           updateMainPreview();
           highlightGallerySelection();
+          persistTextState();
         });
         galleryEl.appendChild(btn);
 

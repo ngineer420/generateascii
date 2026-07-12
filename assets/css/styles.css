@@ -212,7 +212,13 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 20px 60px; }
   gap: 20px;
 }
 @media (min-width: 900px) {
-  .tool-grid { grid-template-columns: 300px 1fr; align-items: start; }
+  .tool-grid { grid-template-columns: 300px 1fr; }
+  /* Stretch (grid default) so controls and output end at the same baseline;
+     the output column's preview grows to soak up any leftover height instead
+     of leaving dead space beside a taller controls column. */
+  .output-col { display: flex; flex-direction: column; }
+  .output-col > .panel:first-child { display: flex; flex-direction: column; flex: 1; }
+  .output-col > .panel:first-child .ascii-surface { flex: 1; }
 }
 
 .panel {
@@ -231,6 +237,13 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 24px 20px 60px; }
 .panel + .panel { margin-top: 16px; }
 
 .controls-stack { display: flex; flex-direction: column; }
+.controls-stack--row { display: flex; flex-direction: column; }
+@media (min-width: 560px) {
+  .controls-stack--row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 20px; }
+}
+@media (min-width: 900px) {
+  .controls-stack--row { grid-template-columns: repeat(4, 1fr); }
+}
 
 fieldset { border: none; padding: 0; margin: 0 0 14px; }
 fieldset legend { padding: 0; }
@@ -293,24 +306,29 @@ fieldset legend { padding: 0; }
 .copy-flash.show { opacity: 1; transform: translateY(0); }
 
 /* ---------- font gallery ---------- */
-.gallery-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.gallery-head h2 { margin: 0; }
-.gallery-count { font-size: 12px; color: var(--text-faint); }
+.gallery-panel { margin-top: 20px; }
 .gallery {
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
 }
-@media (min-width: 640px) {
-  .gallery { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 560px) {
+  .gallery { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 }
-@media (min-width: 1100px) {
-  .gallery { grid-template-columns: repeat(3, 1fr); }
+.gallery-category {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-faint);
+  padding-top: 14px;
+  margin-top: 6px;
+  border-top: 1px solid var(--border-soft);
+}
+.gallery-category:first-child {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
 }
 .gallery-item {
   text-align: left;
