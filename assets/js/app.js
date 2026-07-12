@@ -266,6 +266,7 @@
       applyBgStyle();
       applySizeStyle();
       if (isPlaceholder) fitPlaceholderSize(); // longer than typical input; size it to the surface
+      updateCaret();
     }
 
     // The placeholder phrase ignores the Size slider and scales itself to
@@ -284,8 +285,10 @@
     }
 
     /* ---- the preview is the input ----
-       #text-input is a visually hidden textarea: clicking the art focuses it,
-       keystrokes re-render the art, and a block caret blinks after the art. */
+       #text-input is a visually hidden textarea: clicking the art focuses it
+       and keystrokes re-render the art. The caret is drawn at the art
+       position of the *real* cursor: render the figlet of the text before
+       the cursor and measure its width in monospace columns. */
 
     const caret = document.createElement("span");
     caret.className = "ascii-caret";
@@ -299,16 +302,102 @@
       editHint.textContent = editing ? textInput.value || "(empty)" : EDIT_HINT_DEFAULT;
     }
 
-    outputWrap.addEventListener("click", () => {
+    const measureCtx = document.createElement("canvas").getContext("2d");
+
+    function caretMetrics() {
+      const cs = getComputedStyle(output);
+      const fontSize = parseFloat(cs.fontSize) || 13;
+      measureCtx.font = `${fontSize}px ${MONO_STACK}`;
+      return {
+        charW: measureCtx.measureText("MMMMMMMMMM").width / 10,
+        lineH: parseFloat(cs.lineHeight) || fontSize * 1.05,
+        padL: parseFloat(cs.paddingLeft) || 0,
+        padT: parseFloat(cs.paddingTop) || 0,
+      };
+    }
+
+    // Every line of a FIGlet font renders at the same fixed height.
+    const blockLinesCache = new Map();
+    function fontBlockLines(font) {
+      if (!blockLinesCache.has(font)) {
+        try {
+          blockLinesCache.set(font, renderFigletSync("A", font, "default").split("\n").length);
+        } catch {
+          return 6;
+        }
+      }
+      return blockLinesCache.get(font);
+    }
+
+    // Width, in monospace columns, of the art for `str`. Smushing between
+    // the prefix and the next glyph can overlap a column or two, so this is
+    // within a couple of pixels rather than exact — close enough for a caret.
+    function artCols(str, font, layout) {
+      if (!str) return 0;
+      try {
+        return Math.max(...renderFigletSync(str, font, layout).split("\n").map((l) => l.replace(/\s+$/, "").length));
+      } catch {
+        return 0;
+      }
+    }
+
+    function updateCaret() {
+      if (!outputWrap.classList.contains("is-editing")) return;
+      const raw = currentText();
+      const font = selectedFont || DEFAULT_FONT;
+      const layout = layoutSelect.value;
+      const pos = textInput.selectionStart == null ? raw.length : textInput.selectionStart;
+      const prefix = raw.slice(0, pos);
+      const row = (prefix.match(/\n/g) || []).length;
+      const linePrefix = prefix.slice(prefix.lastIndexOf("\n") + 1);
+      const { charW, lineH, padL, padT } = caretMetrics();
+      const blockH = fontBlockLines(font) * lineH;
+      caret.style.left = `${padL + artCols(linePrefix, font, layout) * charW}px`;
+      caret.style.top = `${padT + row * blockH}px`;
+      caret.style.height = `${blockH}px`;
+    }
+
+    // Map a click on the art back to a cursor index: walk prefix widths on
+    // the clicked row until we pass the click point, then land on the nearer
+    // side of the glyph under it.
+    function caretIndexFromClick(evt) {
+      const raw = currentText();
+      if (!raw) return 0;
+      const font = selectedFont || DEFAULT_FONT;
+      const layout = layoutSelect.value;
+      const rect = output.getBoundingClientRect();
+      const { charW, lineH, padL, padT } = caretMetrics();
+      const blockH = fontBlockLines(font) * lineH;
+      const lines = raw.split("\n");
+      const row = Math.max(0, Math.min(lines.length - 1, Math.floor((evt.clientY - rect.top - padT) / blockH)));
+      const targetCols = (evt.clientX - rect.left - padL) / charW;
+      let base = 0;
+      for (let r = 0; r < row; r++) base += lines[r].length + 1;
+      const line = lines[row];
+      let i = 0;
+      while (i < line.length && artCols(line.slice(0, i + 1), font, layout) < targetCols) i++;
+      if (i < line.length) {
+        const before = artCols(line.slice(0, i), font, layout);
+        const after = artCols(line.slice(0, i + 1), font, layout);
+        if (targetCols - before > after - targetCols) i++;
+      }
+      return base + i;
+    }
+
+    outputWrap.addEventListener("click", (evt) => {
       // Don't steal focus from a manual drag-selection of the art.
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed) return;
+      const idx = caretIndexFromClick(evt);
       textInput.focus();
+      textInput.setSelectionRange(idx, idx);
+      updateCaret();
     });
     textInput.addEventListener("focus", () => {
       outputWrap.classList.add("is-editing");
       updateEditHint();
       if (!currentText()) updateMainPreview(); // placeholder vanishes on focus
+      updateCaret();
     });
     textInput.addEventListener("blur", () => {
       outputWrap.classList.remove("is-editing");
@@ -318,6 +407,11 @@
     textInput.addEventListener("keydown", (e) => {
       if (e.key === "Escape") textInput.blur();
     });
+    // Arrow keys / Home / End move the hidden cursor without re-rendering.
+    document.addEventListener("selectionchange", () => {
+      if (document.activeElement === textInput) updateCaret();
+    });
+    textInput.addEventListener("keyup", updateCaret); // fallback where textarea selectionchange isn't fired
 
     const debouncedMainPreview = debounce(updateMainPreview, 120);
     const debouncedGallery = debounce(renderGallery, 150);
@@ -336,6 +430,7 @@
       sizeVal.textContent = `${sizeSlider.value}px`;
       applySizeStyle();
       if (output.classList.contains("is-placeholder")) fitPlaceholderSize();
+      updateCaret(); // caret coordinates scale with the font size
       persistTextState();
     });
     textColorInput.addEventListener("input", () => {
