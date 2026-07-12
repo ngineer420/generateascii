@@ -65,15 +65,31 @@
 
   <!-- ===================== TEXT TO ASCII ===================== -->
   <section role="tabpanel" id="panel-text" aria-labelledby="tab-text" class="tab-panel active">
-    <div class="tool-grid">
-      <div class="controls-col">
-        <div class="panel">
-          <h2>Text</h2>
-          <div class="controls-stack">
-            <div class="field">
-              <label for="text-input" class="visually-hidden">Your text</label>
-              <textarea id="text-input" rows="2" maxlength="200" placeholder="Type something...">HELLO</textarea>
+    <div class="text-tool-grid">
+      <div class="text-main-col">
+        <div class="panel preview-panel">
+          <div class="output-toolbar">
+            <div class="toolbar-left">
+              <h2 style="margin:0;">Preview</h2>
+              <span class="edit-hint" id="text-edit-hint" aria-hidden="true">click the art &amp; type</span>
             </div>
+            <div class="btn-row">
+              <button type="button" id="text-copy" class="icon-btn">Copy</button>
+              <button type="button" id="text-download-txt" class="icon-btn">.txt</button>
+              <button type="button" id="text-download-png" class="icon-btn">.png</button>
+            </div>
+          </div>
+          <div class="ascii-surface ascii-surface--editable" id="text-output-wrap">
+            <pre id="text-output" aria-hidden="true"></pre>
+            <label for="text-input" class="visually-hidden">Your text</label>
+            <textarea id="text-input" class="ghost-input" rows="1" maxlength="200" autocomplete="off" spellcheck="false">HELLO</textarea>
+          </div>
+          <span class="copy-flash" id="text-copy-flash">Copied!</span>
+        </div>
+
+        <div class="panel">
+          <h2>Style</h2>
+          <div class="controls-stack controls-stack--row">
             <div class="field">
               <label for="layout-select">Layout</label>
               <select id="layout-select">
@@ -108,27 +124,12 @@
         </div>
       </div>
 
-      <div class="output-col">
-        <div class="panel">
-          <div class="output-toolbar">
-            <h2 style="margin:0;">Preview</h2>
-            <div class="btn-row">
-              <button type="button" id="text-copy" class="icon-btn">Copy</button>
-              <button type="button" id="text-download-txt" class="icon-btn">.txt</button>
-              <button type="button" id="text-download-png" class="icon-btn">.png</button>
-            </div>
-          </div>
-          <div class="ascii-surface" id="text-output-wrap">
-            <pre id="text-output" tabindex="0"></pre>
-          </div>
-          <span class="copy-flash" id="text-copy-flash">Copied!</span>
+      <div class="text-side-col">
+        <div class="panel font-list-panel">
+          <h2>Fonts</h2>
+          <div class="gallery" id="font-gallery" aria-label="Font list, grouped by style, click to select"></div>
         </div>
       </div>
-    </div>
-
-    <div class="panel gallery-panel">
-      <h2>Font gallery</h2>
-      <div class="gallery" id="font-gallery" aria-label="Font gallery, grouped by style, click to select"></div>
     </div>
   </section>
 
