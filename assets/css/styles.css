@@ -361,6 +361,10 @@ fieldset legend { padding: 0; }
   resize: none;
   pointer-events: none;
 }
+/* Sample art shown when the input is empty: visibly a placeholder, and it
+   vanishes as soon as you click in to type (the input holds no real text). */
+#text-output.is-placeholder { opacity: .4; }
+
 .ascii-caret { display: none; }
 .is-editing .ascii-caret {
   display: inline-block;
@@ -422,12 +426,37 @@ fieldset legend { padding: 0; }
 .gallery-item[aria-pressed="true"] .font-name { color: var(--accent); }
 .gallery-item pre {
   margin: 0;
-  font-size: 11px;
+  font-size: 11px; /* per-tile JS override scales this so the art fits the width */
   line-height: 1.05;
   color: var(--text);
   white-space: pre;
-  overflow-x: auto;
+  overflow: hidden;
 }
+
+/* fullscreen font browsing */
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.panel-head h2 { margin: 0; }
+.font-list-panel.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  border-radius: 0;
+  border: none;
+  padding: 20px clamp(16px, 4vw, 40px) 24px;
+}
+.font-list-panel.is-fullscreen .gallery {
+  max-height: none;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+body.gallery-fullscreen { overflow: hidden; }
 
 /* ---------- dropzone (image mode) ---------- */
 .dropzone {

@@ -207,7 +207,7 @@
     })();
 
     function currentText() {
-      return (textInput.value || "").slice(0, 200) || "ASCII";
+      return (textInput.value || "").slice(0, 200);
     }
 
     function applyColorStyle() {
@@ -242,15 +242,22 @@
     }
 
     async function updateMainPreview() {
-      const text = currentText();
+      const raw = currentText();
+      const editing = document.activeElement === textInput;
+      // Empty input: while blurred, show a dimmed sample as a placeholder;
+      // while editing, show nothing but the caret — there's no real text to
+      // delete, and pretending otherwise is a trap.
+      const isPlaceholder = !raw && !editing;
+      const text = raw || (isPlaceholder ? "ASCII" : "");
       const font = selectedFont || DEFAULT_FONT;
       const layout = layoutSelect.value;
       try {
         await ensureFont(font);
-        output.textContent = renderFigletSync(text, font, layout);
+        output.textContent = text ? renderFigletSync(text, font, layout) : "";
       } catch (err) {
         output.textContent = `Couldn't render that text in "${font}".\nTry a shorter phrase or a different font.`;
       }
+      output.classList.toggle("is-placeholder", isPlaceholder);
       output.appendChild(caret); // textContent wiped it; caret holds no text, so copy/export are unaffected
       applyColorStyle();
       applyBgStyle();
@@ -282,10 +289,12 @@
     textInput.addEventListener("focus", () => {
       outputWrap.classList.add("is-editing");
       updateEditHint();
+      if (!currentText()) updateMainPreview(); // placeholder vanishes on focus
     });
     textInput.addEventListener("blur", () => {
       outputWrap.classList.remove("is-editing");
       updateEditHint();
+      if (!currentText()) updateMainPreview(); // placeholder returns on blur
     });
     textInput.addEventListener("keydown", (e) => {
       if (e.key === "Escape") textInput.blur();
@@ -345,11 +354,66 @@
       });
     }
 
+    /* ---- fit tile art to its width ----
+       Scales each tile's font-size so the widest art line fills the tile
+       without horizontal scrolling, in both the side list and fullscreen. */
+
+    const CHAR_RATIO = (() => {
+      const ctx = document.createElement("canvas").getContext("2d");
+      ctx.font = `100px ${MONO_STACK}`;
+      return ctx.measureText("M").width / 100;
+    })();
+
+    function fitTilePre(pre) {
+      const w = pre.clientWidth;
+      if (!w) return; // tab hidden; refitted when it becomes visible
+      const cols = Math.max(1, ...pre.textContent.split("\n").map((l) => l.length));
+      let fs = Math.max(4, Math.min(14, Math.floor(w / (cols * CHAR_RATIO))));
+      pre.style.fontSize = fs + "px";
+      // Real glyph metrics drift a little from the canvas measurement at
+      // small sizes; nudge down until the widest line truly fits.
+      while (fs > 4 && pre.scrollWidth > pre.clientWidth) {
+        fs -= 1;
+        pre.style.fontSize = fs + "px";
+      }
+    }
+
+    function fitAllTiles() {
+      galleryEl.querySelectorAll(".gallery-item pre").forEach(fitTilePre);
+    }
+
+    window.addEventListener("resize", debounce(fitAllTiles, 150));
+    // Gallery may have rendered while the Image tab was active (zero widths).
+    document.getElementById("tab-text").addEventListener("click", () => requestAnimationFrame(fitAllTiles));
+
+    /* ---- fullscreen font browsing ---- */
+
+    const fontListPanel = document.getElementById("font-list-panel");
+    const expandBtn = document.getElementById("gallery-expand");
+
+    function setGalleryFullscreen(on) {
+      fontListPanel.classList.toggle("is-fullscreen", on);
+      document.body.classList.toggle("gallery-fullscreen", on);
+      expandBtn.textContent = on ? "✕ Close" : "⛶ Expand";
+      expandBtn.setAttribute("aria-label", (on ? "Close" : "Expand") + " full-screen font list");
+      expandBtn.setAttribute("aria-pressed", String(on));
+      requestAnimationFrame(fitAllTiles); // tile widths just changed
+    }
+
+    expandBtn.addEventListener("click", () => {
+      setGalleryFullscreen(!fontListPanel.classList.contains("is-fullscreen"));
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && fontListPanel.classList.contains("is-fullscreen")) {
+        setGalleryFullscreen(false);
+      }
+    });
+
     // Grouped by category, in catalogue order — mirrors how fonts used to be
     // organized under the (now-removed) font <select>'s optgroups.
     async function renderGallery() {
       galleryEl.innerHTML = "";
-      const text = currentText();
+      const text = currentText() || "ASCII";
       let lastCategory = null;
 
       FONT_CATALOGUE.forEach((f) => {
@@ -379,13 +443,19 @@
           .then(() => {
             const pre = btn.querySelector("pre");
             try {
-              pre.textContent = renderFigletSync(text, f.file, "default");
+              // Trailing whitespace is invisible but widens scrollWidth,
+              // which would skew the fit — strip it for the tile preview.
+              pre.textContent = renderFigletSync(text, f.file, "default")
+                .split("\n").map((l) => l.replace(/\s+$/, "")).join("\n");
             } catch {
               pre.textContent = "(unsupported characters)";
             }
+            fitTilePre(pre);
           })
           .catch(() => {
-            btn.querySelector("pre").textContent = "(failed to load)";
+            const pre = btn.querySelector("pre");
+            pre.textContent = "(failed to load)";
+            fitTilePre(pre);
           });
       });
     }
