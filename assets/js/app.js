@@ -248,12 +248,15 @@
       // while editing, show nothing but the caret — there's no real text to
       // delete, and pretending otherwise is a trap.
       const isPlaceholder = !raw && !editing;
-      const text = raw || (isPlaceholder ? "ASCII" : "");
+      const text = raw || (isPlaceholder ? "Type ASCII here" : "");
       const font = selectedFont || DEFAULT_FONT;
       const layout = layoutSelect.value;
       try {
         await ensureFont(font);
-        output.textContent = text ? renderFigletSync(text, font, layout) : "";
+        let art = text ? renderFigletSync(text, font, layout) : "";
+        // Trailing whitespace would skew the placeholder's fit measurement.
+        if (isPlaceholder) art = art.split("\n").map((l) => l.replace(/\s+$/, "")).join("\n");
+        output.textContent = art;
       } catch (err) {
         output.textContent = `Couldn't render that text in "${font}".\nTry a shorter phrase or a different font.`;
       }
@@ -262,6 +265,22 @@
       applyColorStyle();
       applyBgStyle();
       applySizeStyle();
+      if (isPlaceholder) fitPlaceholderSize(); // longer than typical input; size it to the surface
+    }
+
+    // The placeholder phrase ignores the Size slider and scales itself to
+    // span the preview width without horizontal scrolling; real text goes
+    // back to the slider size (applySizeStyle above).
+    function fitPlaceholderSize() {
+      const w = output.clientWidth;
+      if (!w) return; // text tab hidden
+      const cols = Math.max(1, ...output.textContent.split("\n").map((l) => l.length));
+      let fs = Math.max(6, Math.min(22, Math.floor((w - 40) / (cols * CHAR_RATIO))));
+      output.style.fontSize = fs + "px";
+      while (fs > 6 && output.scrollWidth > output.clientWidth) {
+        fs -= 1;
+        output.style.fontSize = fs + "px";
+      }
     }
 
     /* ---- the preview is the input ----
@@ -316,6 +335,7 @@
     sizeSlider.addEventListener("input", () => {
       sizeVal.textContent = `${sizeSlider.value}px`;
       applySizeStyle();
+      if (output.classList.contains("is-placeholder")) fitPlaceholderSize();
       persistTextState();
     });
     textColorInput.addEventListener("input", () => {
@@ -382,9 +402,13 @@
       galleryEl.querySelectorAll(".gallery-item pre").forEach(fitTilePre);
     }
 
-    window.addEventListener("resize", debounce(fitAllTiles, 150));
-    // Gallery may have rendered while the Image tab was active (zero widths).
-    document.getElementById("tab-text").addEventListener("click", () => requestAnimationFrame(fitAllTiles));
+    function refitAll() {
+      fitAllTiles();
+      if (output.classList.contains("is-placeholder")) fitPlaceholderSize();
+    }
+    window.addEventListener("resize", debounce(refitAll, 150));
+    // Gallery/preview may have rendered while the Image tab was active (zero widths).
+    document.getElementById("tab-text").addEventListener("click", () => requestAnimationFrame(refitAll));
 
     /* ---- fullscreen font browsing ---- */
 
