@@ -155,6 +155,8 @@
   (function textTool() {
     const textInput = document.getElementById("text-input");
     const layoutSelect = document.getElementById("layout-select");
+    const sizeSlider = document.getElementById("text-size");
+    const sizeVal = document.getElementById("text-size-val");
     const textColorInput = document.getElementById("text-color");
     const modeSolidBtn = document.getElementById("mode-solid");
     const modeRainbowBtn = document.getElementById("mode-rainbow");
@@ -173,6 +175,7 @@
         text: textInput.value,
         font: selectedFont,
         layout: layoutSelect.value,
+        size: sizeSlider.value,
         colorMode,
         textColor: textColorInput.value,
         bgMode,
@@ -186,6 +189,10 @@
       if (typeof saved.text === "string") textInput.value = saved.text;
       if (saved.font) selectedFont = saved.font;
       if (saved.layout) layoutSelect.value = saved.layout;
+      if (saved.size) {
+        sizeSlider.value = saved.size;
+        sizeVal.textContent = `${saved.size}px`;
+      }
       if (saved.textColor) textColorInput.value = saved.textColor;
       if (saved.colorMode) {
         colorMode = saved.colorMode;
@@ -217,6 +224,10 @@
       }
     }
 
+    function applySizeStyle() {
+      output.style.fontSize = `${sizeSlider.value}px`;
+    }
+
     function applyBgStyle() {
       outputWrap.classList.remove("bg-transparent");
       if (bgMode === "dark") {
@@ -241,6 +252,7 @@
       }
       applyColorStyle();
       applyBgStyle();
+      applySizeStyle();
     }
 
     const debouncedMainPreview = debounce(updateMainPreview, 120);
@@ -253,6 +265,11 @@
     });
     layoutSelect.addEventListener("change", () => {
       updateMainPreview();
+      persistTextState();
+    });
+    sizeSlider.addEventListener("input", () => {
+      sizeVal.textContent = `${sizeSlider.value}px`;
+      applySizeStyle();
       persistTextState();
     });
     textColorInput.addEventListener("input", () => {
@@ -352,7 +369,7 @@
 
     function renderTextToPng(asciiText) {
       const lines = asciiText.split("\n");
-      const fontSize = 16;
+      const fontSize = parseInt(sizeSlider.value, 10);
       const lineHeight = fontSize * 1.05;
       const pad = 24;
       const dpr = Math.max(1, window.devicePixelRatio || 1);
