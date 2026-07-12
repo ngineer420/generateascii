@@ -35,8 +35,7 @@ CNAME                   GitHub Pages custom domain (generateascii.com)
 
 1. Deploy the site and get it live at generateascii.com.
 2. Apply at https://adsense.google.com with the live URL. Approval requires a working privacy policy (already included) and some real content/traffic — it isn't instant.
-3. Once approved, uncomment the AdSense `<script>` tag in `index.html`'s `<head>` and replace `ca-pub-XXXXXXXXXXXXXXXX` with your publisher ID.
-4. Fill in real ad units in place of the `.ad-slot` placeholder `<div>`s (`#ad-top`, `#ad-inline`, `#ad-footer`) with your AdSense ad unit code.
+3. Once approved, uncomment the AdSense `<script>` tag in `index.html`'s `<head>` and replace `ca-pub-XXXXXXXXXXXXXXXX` with your publisher ID. Auto ads then places ad units automatically — no manual placement needed.
 
 ## Custom domain (generateascii.com)
 

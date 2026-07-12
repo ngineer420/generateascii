@@ -401,27 +401,6 @@ fieldset legend { padding: 0; }
 .segmented button:last-child { border-right: none; }
 .segmented button[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
 
-/* ---------- ad slots ---------- */
-.ad-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-raised);
-  border: 1px dashed var(--border);
-  border-radius: 10px;
-  color: var(--text-faint);
-  font-size: 11px;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  margin: 28px auto;
-  max-width: var(--maxw);
-  overflow: hidden;
-}
-.ad-slot::before { content: "Advertisement"; }
-.ad-slot--leaderboard { min-height: 90px; }
-.ad-slot--inline { min-height: 100px; margin: 24px 0; }
-.ad-slot--footer { min-height: 90px; }
-
 /* ---------- footer ---------- */
 .site-footer {
   border-top: 1px solid var(--border-soft);

@@ -220,7 +220,7 @@
     function applyBgStyle() {
       outputWrap.classList.remove("bg-transparent");
       if (bgMode === "dark") {
-        outputWrap.style.background = "var(--bg-inset)";
+        outputWrap.style.background = "#08090a";
       } else if (bgMode === "light") {
         outputWrap.style.background = "#f5f6f4";
       } else {
