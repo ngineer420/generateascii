@@ -379,14 +379,18 @@ fieldset legend { padding: 0; }
   resize: none;
   pointer-events: none;
 }
-.ascii-caret { display: none; }
-.is-editing .ascii-caret {
-  display: inline-block;
-  width: .55em;
-  height: 1em;
-  margin-left: 1px;
-  vertical-align: text-bottom;
+/* The caret is positioned in art coordinates (JS sets left/top/height from
+   the rendered width of the text before the cursor), so it tracks the real
+   cursor through arrow keys, backspace, and click-to-place. */
+#text-output { position: relative; }
+.ascii-caret {
+  display: none;
+  position: absolute;
+  width: 2px;
   background: var(--accent);
+}
+.is-editing .ascii-caret {
+  display: block;
   animation: caret-blink 1.1s steps(1) infinite;
 }
 @keyframes caret-blink { 50% { opacity: 0; } }
