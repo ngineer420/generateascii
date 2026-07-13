@@ -6,6 +6,26 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://generateascii.com/articles/history-of-ascii-art.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://generateascii.com/articles/how-text-to-ascii-generators-work.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://generateascii.com/articles/where-ascii-art-lives-today.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://generateascii.com/articles/why-we-built-this-generator.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://generateascii.com/privacy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>

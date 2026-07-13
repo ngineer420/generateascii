@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Text-to-ASCII Generators Work: FIGlet Fonts, Grids, and Smushing — generateascii.com</title>
+<meta name="description" content="A plain-English explanation of how ASCII banner generators turn text into big letter art: the FIGlet font format, character grids, smushing rules, and why monospace matters.">
+<link rel="canonical" href="https://generateascii.com/articles/how-text-to-ascii-generators-work.html">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/styles.css">
+<style>
+.article pre {
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--accent);
+}
+.article .more-reading { border-top: 1px solid var(--border-soft); margin-top: 40px; padding-top: 20px; }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7560786263587509" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="generateascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+      <span class="brand-tag">text &amp; image → ASCII art</span>
+    </a>
+  </div>
+</header>
+<main class="container-narrow article">
+  <h1>How Text-to-ASCII Generators Work</h1>
+  <p>Type "OK" into a banner generator like <a href="/">ours</a> and you get this back in a few milliseconds:</p>
+<pre>
+  ___  _  __
+ / _ \| |/ /
+| | | | ' /
+| |_| | . \
+ \___/|_|\_\
+</pre>
+  <p>It looks like magic the first time, but the machinery underneath is refreshingly simple — simple enough that the standard for it, the FIGlet font format, has barely changed since 1991 and still runs everywhere from Unix servers to the JavaScript in your browser tab. Here is how the trick works, piece by piece.</p>
+
+  <h2>Every letter is a tiny grid of characters</h2>
+  <p>An ordinary font describes letter shapes as curves. A FIGlet font describes each letter as a small rectangle of plain characters — typically five to ten rows tall and a handful of columns wide. The capital <code>H</code> in the classic "standard" font, for example, is stored as a six-row block built out of pipes, underscores, and spaces. There is no drawing involved at render time: the glyph <em>is</em> text, designed once by a human font author who decided which slashes and underscores best suggest each letterform at that size.</p>
+  <p>A font file (a <code>.flf</code> file, for "FIGlet font") is just a plain-text archive of these blocks: a header line with the font's dimensions and settings, then one block for each printable ASCII character, in order. Because the format is plain text, anyone can open a font in an editor, see exactly how each letter is drawn, and make their own variant. That openness is why hundreds of fonts exist — this site ships 59 of them, from tidy block capitals to sprawling script styles.</p>
+
+  <h2>Rendering: stack rows, not letters</h2>
+  <p>To render a word, the generator cannot simply print each big letter one after another, because output is written line by line. Instead it works row-wise: take row 1 of the first letter, append row 1 of the second letter, and so on across the whole word; then do the same for row 2, and repeat down to the last row. Conceptually, all the letter-grids are placed side by side and the result is read off horizontally. As long as every glyph in a font has the same height, the rows line up and the word emerges intact.</p>
+
+  <h2>Kerning and "smushing"</h2>
+  <p>Naively butting the rectangles together leaves wide gaps, because each glyph block includes padding. FIGlet defines three layout modes, and our generator exposes them in the Layout control:</p>
+  <ul>
+    <li><strong>Full width</strong> — glyph blocks are placed side by side untouched. Widest output, most whitespace.</li>
+    <li><strong>Kerning (our "Default")</strong> — the blocks are slid toward each other until any character of one glyph would touch a character of the next, then stopped. Gaps shrink, but no characters merge.</li>
+    <li><strong>Smushing (our "Fitted")</strong> — the blocks are slid one step further, so the edge columns overlap, and a set of rules decides what single character should represent the two that now share a cell. For instance, two underscores merge into one underscore, a <code>/</code> meeting a <code>\</code> can become <code>|</code>, and any visible character wins against a space. Each font declares which smushing rules it tolerates in its header, because font authors know which merges keep their letterforms legible.</li>
+  </ul>
+  <p>One subtle detail: font authors sometimes need a space <em>inside</em> a glyph that must never be smushed away — the gap in the middle of a <code>U</code>, say. The format solves this with a "hardblank," a placeholder character (often <code>$</code>) that behaves as an immovable space during layout and is replaced by a real space at the very end.</p>
+
+  <h2>Why monospace is non-negotiable</h2>
+  <p>Everything above assumes one thing: every character occupies exactly the same width on screen. FIGlet output is a grid, and it only looks right in a monospace font, where an <code>i</code>, a <code>W</code>, and a space are all the same width. Paste a banner into a proportional font — a Word document, a default email body — and the columns drift, the diagonals shear, and the art collapses into noise. This is not a bug in the generator; it is the viewing environment breaking the grid. It is also why ASCII art thrives in terminals, code editors, and <code>&lt;pre&gt;</code> tags, all of which are monospace by convention, and why our preview panel renders in a monospace stack no matter what your system default is.</p>
+
+  <h2>The other direction: images to characters</h2>
+  <p>Image-to-ASCII conversion, the second tool on this site, shares the grid idea but inverts the process. Instead of building glyphs up from characters, it tears an image down into cells. The image is scaled to a chosen number of columns, each cell's pixels are averaged into a brightness value, and that brightness indexes into a "ramp" — a string of characters ordered from sparse to dense, such as:</p>
+<pre>
+ .:-=+*#%@
+</pre>
+  <p>A bright cell becomes a space or a period; a dark cell becomes a <code>%</code> or <code>@</code>. One correction matters more than any other: character cells are taller than they are wide (roughly 2:1 in most monospace fonts), so the converter samples fewer rows than a square grid would need. Skip that adjustment and every image comes out stretched vertically. Add optional brightness, contrast, and gamma adjustments before the ramp lookup, and per-cell color sampling if you want colored output, and you have essentially the entire algorithm our image converter runs on a canvas element in your browser.</p>
+
+  <h2>Why this all runs client-side just fine</h2>
+  <p>Neither algorithm needs a server. Rendering a FIGlet banner is string concatenation over a few kilobytes of font data; converting an image is a single pass over a downscaled pixel buffer. A phone from a decade ago can do both between keystrokes. That is why <a href="/">generateascii.com</a> does everything locally: the font files and figlet.js port load with the page, your text and images never leave the browser, and the preview updates live as you type. The 1991 design turned out to be perfectly shaped for the 2020s web.</p>
+  <p>If you want to see the layout modes in action, open the generator, type a word with adjacent round letters ("moon" works well), and switch between Full width, Default, and Fitted — you can watch the kerning and smushing rules pull the letters together.</p>
+
+  <div class="more-reading">
+    <h2>More reading</h2>
+    <ul>
+      <li><a href="/articles/history-of-ascii-art.html">The history of ASCII art: from typewriters to FIGlet</a></li>
+      <li><a href="/articles/where-ascii-art-lives-today.html">Where ASCII art still lives today (and how to keep it aligned)</a></li>
+      <li><a href="/articles/why-we-built-this-generator.html">Why we built this generator, and how to get the best results</a></li>
+      <li><a href="/">← Back to the ASCII art generator</a></li>
+    </ul>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>© <span id="year"></span> generateascii.com</div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
+  </div>
+</footer>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
