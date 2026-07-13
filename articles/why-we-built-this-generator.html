@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why We Built This ASCII Generator — and How to Get the Best Results — generateascii.com</title>
+<meta name="description" content="The design decisions behind generateascii.com — fully client-side, 59 FIGlet fonts, live preview — plus concrete tips for better text banners and image conversions.">
+<link rel="canonical" href="https://generateascii.com/articles/why-we-built-this-generator.html">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/styles.css">
+<style>
+.article pre {
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--accent);
+}
+.article .more-reading { border-top: 1px solid var(--border-soft); margin-top: 40px; padding-top: 20px; }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7560786263587509" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="generateascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+      <span class="brand-tag">text &amp; image → ASCII art</span>
+    </a>
+  </div>
+</header>
+<main class="container-narrow article">
+  <h1>Why We Built This Generator — and How to Get the Best Results From It</h1>
+  <p>There are plenty of ASCII art generators on the internet. Most of them work. So why build another one? Because "works" and "pleasant to use" are different bars, and because several design decisions that seemed obvious to us turned out to be surprisingly rare. This article explains the choices behind <a href="/">generateascii.com</a>, and then gets practical: concrete tips for getting genuinely good output from both the text and image tools.</p>
+
+  <h2>Decision one: everything runs in your browser</h2>
+  <p>The biggest choice was architectural. Many converters upload your input to a server, process it there, and send the result back. For ASCII generation that is unnecessary on every axis: rendering a FIGlet banner is lightweight string manipulation, and converting an image is one pass over a downscaled pixel grid. Your laptop — or your phone — does both faster than a network round-trip could even begin.</p>
+  <p>So this site has no backend at all. The FIGlet fonts and the figlet.js rendering engine load with the page; image conversion happens on an HTML canvas on your device. Text you type and photos you drop in never leave your browser, which matters more for images than people first realize — the photos people convert are often personal ones. It also means the tool keeps working on a flaky connection once loaded, and there is no queue, no rate limit, and no "processing…" spinner. The preview re-renders on every keystroke.</p>
+
+  <h2>Decision two: the preview is the interface</h2>
+  <p>Most banner generators make you type into one box, press a button, and read output in another. We flattened that: you click the art itself and type, and the banner updates around your cursor. Font selection works the same way — the font list renders every one of the 59 fonts as a live sample, so you browse actual letterforms instead of guessing from names like "Slant" or "Doom." The Expand button turns the list into a full-screen gallery when you want to compare seriously.</p>
+
+  <h2>Decision three: export for where the art is going</h2>
+  <p>ASCII art ends up in two kinds of places: text contexts (terminals, READMEs, chat) and image contexts (social posts, thumbnails, slides). The generator treats both as first-class. Copy puts plain text on your clipboard; the .txt download gives you a file; and the .png export renders the art with your chosen font size, color — solid or rainbow — and a dark, light, or transparent background, so it can sit on any design without a box around it.</p>
+
+  <h2>Getting the best text banners</h2>
+  <ul>
+    <li><strong>Keep it short.</strong> Banner fonts multiply width by six to ten times. A word of 4–8 characters is the sweet spot; a full sentence will be enormous. If the destination is a terminal or README, aim to keep the output under about 80 columns.</li>
+    <li><strong>Match the font to the destination.</strong> Big display fonts are wonderful as one-off art but overwhelming at the top of a file people read daily. The font list is grouped by style — compact, block, script, outline — so browse the small-and-tidy groups for READMEs and save the towering ones for splash screens.</li>
+    <li><strong>Use the Layout control.</strong> "Default" applies kerning and suits almost everything. "Fitted" smushes letters together for a denser, logo-like look. "Full width" spreads them out — good when you want the banner to fill a fixed width. Try all three; the difference is bigger than you would expect.</li>
+    <li><strong>Test with your real text.</strong> Lowercase, digits, and punctuation vary wildly in quality between FIGlet fonts — some fonts have gorgeous capitals and awkward everything else. Type the exact string you plan to use before committing to a font.</li>
+    <li><strong>Mind mixed case.</strong> In many classic fonts, ALL CAPS reads far more cleanly at a glance than mixed case. When a banner looks muddled, capitalizing it is the first thing to try.</li>
+  </ul>
+
+  <h2>Getting the best image conversions</h2>
+  <p>Image-to-ASCII quality depends far more on the input image and settings than on the converter. The tips that actually move the needle:</p>
+  <ul>
+    <li><strong>Start with a high-contrast subject.</strong> The converter has at most a few thousand character cells to work with. Portraits against plain backgrounds, logos, silhouettes, and pets with strong markings convert beautifully; busy scenes with cluttered backgrounds turn to mush. If the subject doesn't read in a small grayscale thumbnail, it won't read in ASCII.</li>
+    <li><strong>Tune width to the destination.</strong> The Width slider (40–300 columns) is the resolution control. 80–120 columns fits terminals and chat; 200+ gives fine detail but needs a small font or a PNG export to view. More columns is not automatically better — detail below one cell simply vanishes.</li>
+    <li><strong>Reach for Contrast and Gamma before giving up on an image.</strong> Muddy output usually means the image's tones are bunched in the middle of the range. Raising contrast spreads them across the character ramp; gamma brightens or darkens midtones without crushing the ends. Small moves — ten or twenty points — go a long way.</li>
+    <li><strong>Match Invert to your background.</strong> Character ramps assume dark-on-light or light-on-dark. If your subject looks like a photographic negative, don't fix the image — just toggle Invert, or switch the output background between dark and light.</li>
+    <li><strong>Pick the ramp for the mood.</strong> "Standard" is balanced; "Detailed" uses a longer ramp for smoother gradients; "Blocks" (<code>░ ▒ ▓ █</code>) gives a chunky, retro-DOS look that survives proportional fonts better; "Binary" makes everything out of 0s and 1s, which is a gimmick — but a good one. The custom ramp accepts any characters you like, ordered light to dark.</li>
+  </ul>
+
+  <h2>A small example</h2>
+  <p>To show the scale of the thing: this five-second banner, made with the standard font, is the kind of output the text tool produces —</p>
+<pre>
+ _          _ _
+| |__   ___| | | ___
+| '_ \ / _ \ | |/ _ \
+| | | |  __/ | | (_) |
+|_| |_|\___|_|_|\___/
+</pre>
+  <p>— ready to paste into a README fence or a login script as-is.</p>
+
+  <h2>What's next</h2>
+  <p>The tool grows in the direction people actually pull it: recent additions like the font size slider, layout modes, and the full-screen font gallery all came from real usage. If something about the generator gets in your way, or there is a font or export format you miss, we want to hear about it. In the meantime, <a href="/">open the generator</a>, click the preview, and type — the fastest way to learn what it can do is to watch it re-render under your fingers.</p>
+
+  <div class="more-reading">
+    <h2>More reading</h2>
+    <ul>
+      <li><a href="/articles/history-of-ascii-art.html">The history of ASCII art: from typewriters to FIGlet</a></li>
+      <li><a href="/articles/how-text-to-ascii-generators-work.html">How text-to-ASCII generators actually work</a></li>
+      <li><a href="/articles/where-ascii-art-lives-today.html">Where ASCII art still lives today (and how to keep it aligned)</a></li>
+      <li><a href="/">← Back to the ASCII art generator</a></li>
+    </ul>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>© <span id="year"></span> generateascii.com</div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
+  </div>
+</footer>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

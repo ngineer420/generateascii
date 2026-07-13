@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The History of ASCII Art: From Typewriters to FIGlet — generateascii.com</title>
+<meta name="description" content="How ASCII art evolved from 19th-century typewriter art through RTTY, line printers, BBS culture, Usenet signatures, and FIGlet — and why it never died.">
+<link rel="canonical" href="https://generateascii.com/articles/history-of-ascii-art.html">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/styles.css">
+<style>
+.article pre {
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--accent);
+}
+.article .more-reading { border-top: 1px solid var(--border-soft); margin-top: 40px; padding-top: 20px; }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7560786263587509" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="generateascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+      <span class="brand-tag">text &amp; image → ASCII art</span>
+    </a>
+  </div>
+</header>
+<main class="container-narrow article">
+  <h1>The History of ASCII Art: From Typewriters to FIGlet</h1>
+  <p>ASCII art — pictures drawn with nothing but the letters, digits, and punctuation on a keyboard — feels like a product of the early internet. In truth, people were making pictures out of type decades before computers existed, and the tradition has survived every technology shift since. This is a short tour of where it came from and how the pieces you can still make with our <a href="/">free ASCII art generator</a> fit into that lineage.</p>
+
+  <h2>Before computers: typewriter art</h2>
+  <p>The oldest ancestor of ASCII art is typewriter art. Almost as soon as typewriters became common office equipment in the late 1800s, people started using them for something other than correspondence. Secretaries and hobbyists discovered that by overlaying characters, adjusting the platen by fractions of a line, and choosing dense characters like <code>M</code>, <code>W</code>, and <code>#</code> for dark areas, they could produce surprisingly detailed portraits and landscapes. Typing competitions in the early twentieth century sometimes included an artistic category, and magazines published typewriter pictures of butterflies, churches, and film stars.</p>
+  <p>The core insight of typewriter art is exactly the one every ASCII generator uses today: characters have different visual densities. A space is white, a period is nearly white, and an <code>@</code> or <code>#</code> is nearly black. Arrange them on a fixed grid and you have a crude but workable grayscale image.</p>
+
+  <h2>Teleprinters and RTTY</h2>
+  <p>The next hosts for text art were teleprinters — the electromechanical machines used for telegrams, news wires, and later radioteletype (RTTY). Amateur radio operators in the 1950s through 1970s traded long perforated paper tapes containing pictures encoded as sequences of characters. Feeding a tape into a teleprinter would slowly hammer out a pin-up girl, a Christmas scene, or a station logo, line by line. Because tapes could be duplicated and re-transmitted, popular pieces circulated for years, passed from operator to operator — an early form of viral content, moving at 45.45 baud.</p>
+  <p>RTTY art mattered historically because it established text pictures as something you <em>share over a wire</em>, not just something you type at your desk. When computer networks arrived, the habit transferred immediately.</p>
+
+  <h2>Line printers and the mainframe era</h2>
+  <p>In the 1960s and 1970s, university and corporate computer rooms were full of line printers — fast, loud machines that printed a whole row of characters at once. Programmers quickly put them to recreational use. Calendar girls, Snoopy posters, Mona Lisa reproductions, and Christmas banners printed on green-bar paper were taped to the walls of countless computer labs. Some installations even printed a large banner page with the user's name spelled out in giant letters made of smaller letters before every print job, so operators could sort the output — a purely practical use of text-as-typography that directly foreshadows banner fonts.</p>
+
+  <h2>ASCII gets its name</h2>
+  <p>The American Standard Code for Information Interchange was standardized in 1963 and revised in 1967, fixing a shared set of 95 printable characters. Before ASCII, every manufacturer had its own character encoding, so a picture made on one system could turn to garbage on another. A universal code meant a picture made from those 95 characters would render identically on any conforming terminal or printer. That portability is the entire reason the art form is named after an encoding standard: ASCII was the common denominator that let text art travel.</p>
+
+  <h2>BBSes, ANSI, and the scene</h2>
+  <p>When dial-up bulletin board systems (BBSes) took off in the 1980s, text was all there was. Every BBS needed a welcome screen, menus, and file-area headers, and sysops competed to make theirs distinctive. On IBM PCs, the extended code page 437 character set added block and shading characters (<code>░ ▒ ▓ █</code>), and ANSI escape codes added sixteen colors and cursor control. The resulting "ANSI art" scene grew into a genuine subculture, with art groups such as ACiD and iCE releasing monthly packs of member artwork throughout the early 1990s. Strictly speaking ANSI art goes beyond pure ASCII, but the two communities were one and the same, and many artists worked in both.</p>
+
+  <h2>Usenet, email signatures, and emoticons</h2>
+  <p>On Usenet and early email, ASCII art found a smaller-scale niche: the signature block. Custom .sig files ended posts with a few lines of art — a tiny dragon, a sailboat, a name in stylized letters. Etiquette held signatures to about four lines, which made compact ASCII art a small craft of its own. The same era produced the emoticon: Scott Fahlman's 1982 proposal of <code>:-)</code> on a Carnegie Mellon message board is arguably the most reproduced piece of character art ever created. In Japan, the wider character repertoire of Shift-JIS enabled a parallel tradition of "kaomoji" faces like <code>(^_^)</code> and elaborate multi-line scenes on boards such as 2channel.</p>
+
+  <h2>FIGlet and banner fonts</h2>
+  <p>The tool most relevant to this site arrived in 1991, when Glenn Chappell released FIGlet ("Frank, Ian and Glenn's letters"). FIGlet takes ordinary text and renders each character as a large glyph built from smaller characters, using interchangeable font files:</p>
+<pre>
+ _   _ _
+| | | (_)
+| |_| | |
+|  _  | |
+|_| |_|_|
+</pre>
+  <p>Because the font format was open and simple, hundreds of fonts appeared — from clean block letters to flaming script styles — and FIGlet output became the standard look of Unix login banners, README headers, and IRC flourishes. The text-to-ASCII half of our generator is built on this exact tradition: it ships 59 classic FIGlet fonts and renders them with figlet.js, a faithful JavaScript port of the original program.</p>
+
+  <h2>Survival in the graphical age</h2>
+  <p>ASCII art should, by rights, have died when graphical displays became universal. It didn't, for a few practical reasons. Text is tiny, searchable, copy-pasteable, and renders anywhere a monospace font exists — a terminal, a code comment, a chat message, a git commit. It degrades gracefully where images can't load at all. And there is a cultural element: a FIGlet banner at the top of a CLI tool signals a certain hacker-heritage playfulness that a PNG logo can't. Today you'll find ASCII art in <code>neofetch</code> outputs, npm postinstall messages, error pages, and the source code of major websites, where companies hide recruiting messages in HTML comments.</p>
+  <p>Sixty years after the encoding was standardized and a century after typists first drew with letterforms, the form is still evolving — which is why we built a modern, in-browser tool for it. If reading this made you want to make something, <a href="/">try the generator</a>: type a word, pick a font, and you're participating in one of computing's oldest folk arts.</p>
+
+  <div class="more-reading">
+    <h2>More reading</h2>
+    <ul>
+      <li><a href="/articles/how-text-to-ascii-generators-work.html">How text-to-ASCII generators actually work</a></li>
+      <li><a href="/articles/where-ascii-art-lives-today.html">Where ASCII art still lives today (and how to keep it aligned)</a></li>
+      <li><a href="/articles/why-we-built-this-generator.html">Why we built this generator, and how to get the best results</a></li>
+      <li><a href="/">← Back to the ASCII art generator</a></li>
+    </ul>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>© <span id="year"></span> generateascii.com</div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
+  </div>
+</footer>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

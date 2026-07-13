@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where ASCII Art Still Lives Today — Terminals, READMEs, and Beyond — generateascii.com</title>
+<meta name="description" content="ASCII art is alive in terminal banners, README files, code comments, and chat. Here's where it's used in 2026 — and practical tips for keeping it aligned everywhere you paste it.">
+<link rel="canonical" href="https://generateascii.com/articles/where-ascii-art-lives-today.html">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/styles.css">
+<style>
+.article pre {
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--accent);
+}
+.article .more-reading { border-top: 1px solid var(--border-soft); margin-top: 40px; padding-top: 20px; }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7560786263587509" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="generateascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+      <span class="brand-tag">text &amp; image → ASCII art</span>
+    </a>
+  </div>
+</header>
+<main class="container-narrow article">
+  <h1>Where ASCII Art Still Lives Today</h1>
+  <p>ASCII art predates the graphical web by decades, and it has comfortably outlived every prediction of its death. The reason is practical: text renders everywhere, weighs nothing, survives copy-paste, and works in places where images simply cannot go. Here is where character art is still doing real work in 2026, and — because half the battle is keeping it from falling apart when you paste it — the alignment tips that make the difference between crisp art and a scrambled mess.</p>
+
+  <h2>Terminal banners and CLI tools</h2>
+  <p>The single biggest home for ASCII art today is the terminal. Command-line tools print FIGlet-style banners on startup to announce themselves — developer tools, installers, and build systems all do it. Server administrators put art in the message of the day (<code>/etc/motd</code>) or SSH pre-login banner, partly for personality and partly as a genuinely useful "you are on the production box" warning that is much harder to miss than a hostname. System-info tools like neofetch pair a distro logo drawn in characters with machine stats, and that screenshot format has become its own genre on Linux forums. If the environment is text-only, text art is not retro — it is the only art available.</p>
+
+  <h2>README files and project pages</h2>
+  <p>A banner at the top of a README gives a project an identity before a single image loads, and it shows up identically on GitHub, in a terminal <code>cat</code>, and in an editor. The one rule: always wrap the art in a fenced code block, or Markdown will re-flow it into a single mangled paragraph.</p>
+<pre>
+```
+                _ _ _
+ _ __  _   _   | (_) |__
+| '_ \| | | |  | | | '_ \
+| |_) | |_| |  | | | |_) |
+| .__/ \__, |  |_|_|_.__/
+|_|    |___/
+```
+</pre>
+  <p>Inside the fence, GitHub renders the block in a monospace font and leaves every space exactly where you put it.</p>
+
+  <h2>Code comments and source Easter eggs</h2>
+  <p>Large codebases often mark major section boundaries with big comment banners — a five-line "INITIALIZATION" in block letters is visible in a scrollbar minimap in a way an ordinary comment never is. Then there are the Easter eggs: plenty of major websites hide ASCII art in their HTML source or serve recruiting messages in the browser console, on the theory that anyone reading the source is exactly who they want to hire. A word of caution from experience: some linters and formatters will happily re-indent your masterpiece, so keep banners inside block comments and check what your formatter does to them before committing.</p>
+
+  <h2>Chat, social posts, and forums</h2>
+  <p>Discord, Slack, IRC, and most forums render code blocks in monospace, which makes them reliable vessels for small art — wrap art in triple backticks on Discord or Slack and it survives. Plain text fields are shakier: X/Twitter and most social feeds use proportional fonts, so classic line-drawn art shears apart there. Art built from full-width block characters (<code>█ ▓ ▒ ░</code>) survives proportional rendering far better, which is why the block style dominates copypasta culture. Small one-liners and kaomoji, of course, work anywhere:</p>
+<pre>
+ /\_/\
+( o.o )
+ &gt; ^ &lt;
+</pre>
+
+  <h2>Email signatures, commit messages, and everything else</h2>
+  <p>Plain-text email signatures still carry tiny art in some corners of the internet, in the old Usenet tradition of keeping it to a few lines. Git commit messages and tags occasionally get celebratory banners for release commits. Network engineers put art in router login banners; game developers ship it in server consoles; and data-center folklore is full of art left in config file comments by long-departed admins. Anywhere plain text persists, art follows.</p>
+
+  <h2>Keeping it aligned: the practical checklist</h2>
+  <p>Nearly every "my ASCII art is broken" problem comes down to one of five causes:</p>
+  <ul>
+    <li><strong>Proportional fonts.</strong> The number one killer. ASCII art is a grid, and the grid only holds if every character is the same width. Paste into monospace contexts (terminals, code blocks, <code>&lt;pre&gt;</code> tags) or force one. If art looks sheared, this is almost always why.</li>
+    <li><strong>Markdown and HTML re-flow.</strong> Renderers collapse runs of whitespace unless you tell them not to. In Markdown, use fenced code blocks; in HTML, use <code>&lt;pre&gt;</code>; in wikis and forums, look for a "code" or "preformatted" button.</li>
+    <li><strong>Tabs.</strong> A tab renders as 2, 4, or 8 columns depending on who is displaying it. Good generators (including <a href="/">ours</a>) emit only spaces, but if you hand-edit art in an editor configured to insert tabs, alignment will break for everyone whose tab width differs from yours.</li>
+    <li><strong>Escaping in code.</strong> Embedding art in source strings has two traps: backslashes and quotes. A shell heredoc, a Python triple-quoted raw string (<code>r"""…"""</code>), or a JavaScript template literal lets you paste art nearly verbatim — but backslash-heavy fonts still need doubling in ordinary strings, and in template literals a stray backtick or <code>${</code> in the art will end or interpolate the string. When in doubt, print the string and compare against the original.</li>
+    <li><strong>Trailing whitespace and wrapping.</strong> Some tools strip trailing spaces (usually harmless), and narrow terminals hard-wrap long lines (never harmless). Keep banners under about 80 columns if they need to survive arbitrary terminals — on our generator, the font list makes it easy to pick a compact font when width is tight.</li>
+  </ul>
+
+  <h2>Try it somewhere new</h2>
+  <p>The pattern across all of these habitats is the same: ASCII art persists wherever plain text is the medium, and plain text is not going anywhere. If you want to add a banner to your own README, MOTD, or startup script, <a href="/">the generator on our homepage</a> will render your text in 59 fonts, live, and export it as text or PNG — then the checklist above will keep it looking sharp wherever you put it.</p>
+
+  <div class="more-reading">
+    <h2>More reading</h2>
+    <ul>
+      <li><a href="/articles/history-of-ascii-art.html">The history of ASCII art: from typewriters to FIGlet</a></li>
+      <li><a href="/articles/how-text-to-ascii-generators-work.html">How text-to-ASCII generators actually work</a></li>
+      <li><a href="/articles/why-we-built-this-generator.html">Why we built this generator, and how to get the best results</a></li>
+      <li><a href="/">← Back to the ASCII art generator</a></li>
+    </ul>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>© <span id="year"></span> generateascii.com</div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
+  </div>
+</footer>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
