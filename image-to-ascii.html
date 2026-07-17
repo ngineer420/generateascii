@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Generate ASCII — Free Text &amp; Image to ASCII Art Generator</title>
-<meta name="description" content="Turn text into ASCII art banners with 59 fonts, or convert any image or photo into ASCII art — free, instant, and fully processed in your browser. Nothing is uploaded.">
-<link rel="canonical" href="https://generateascii.com/">
+<title>Image to ASCII Art Converter — Photo to ASCII — generateascii.com</title>
+<meta name="description" content="Convert any image or photo into ASCII art in your browser. Adjust width, character set, brightness, contrast, and color — free, instant, and nothing is uploaded.">
+<link rel="canonical" href="https://generateascii.com/image-to-ascii">
 <meta name="theme-color" content="#0b0d0f">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="Generate ASCII — Free Text &amp; Image to ASCII Art Generator">
-<meta property="og:description" content="Turn text into ASCII art banners with 59 fonts, or convert any image into ASCII art. Free, instant, runs entirely in your browser.">
-<meta property="og:url" content="https://generateascii.com/">
+<meta property="og:title" content="Image to ASCII Art Converter — Photo to ASCII">
+<meta property="og:description" content="Convert any image or photo into ASCII art in your browser. Free, instant, nothing is uploaded.">
+<meta property="og:url" content="https://generateascii.com/image-to-ascii">
 <meta property="og:image" content="https://generateascii.com/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Generate ASCII — Free Text &amp; Image to ASCII Art Generator">
-<meta name="twitter:description" content="Turn text into ASCII art banners with 59 fonts, or convert any image into ASCII art. Free, instant, runs entirely in your browser.">
+<meta name="twitter:title" content="Image to ASCII Art Converter — Photo to ASCII">
+<meta name="twitter:description" content="Convert any image or photo into ASCII art in your browser. Free, instant, nothing is uploaded.">
 <meta name="twitter:image" content="https://generateascii.com/assets/og-image.png">
 
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
@@ -25,15 +25,15 @@
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": "Generate ASCII",
-  "url": "https://generateascii.com/",
+  "name": "Image to ASCII Art Converter",
+  "url": "https://generateascii.com/image-to-ascii",
   "applicationCategory": "DesignApplication",
   "operatingSystem": "Any",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "description": "Free browser-based ASCII art generator: convert text into ASCII banner fonts or convert images into ASCII art."
+  "description": "Free browser-based image-to-ASCII converter that turns photos into character art using canvas-based luminance mapping."
 }
 </script>
-  
+
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7560786263587509" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -53,91 +53,18 @@
 
 <main id="main">
   <div class="hero">
-    <h1>Free ASCII Art Generator</h1>
-    <p>Convert text into ASCII banner art, or turn any image into ASCII — instantly, free, no sign-up.</p>
-    <p class="trust-line">Runs 100% in your browser<span class="dot">•</span>Nothing is uploaded to a server<span class="dot">•</span>59 fonts</p>
+    <h1>Image to ASCII Art Converter</h1>
+    <p>Drop in a photo or image and convert it into ASCII art — adjust the detail, characters, and color, all instantly and free.</p>
+    <p class="trust-line">Runs 100% in your browser<span class="dot">•</span>Nothing is uploaded to a server<span class="dot">•</span>Photos stay private</p>
   </div>
 
-  <nav role="tablist" class="tabbar" aria-label="ASCII generator mode">
-    <a role="tab" id="tab-text" href="/text-to-ascii" aria-controls="panel-text" aria-selected="true" aria-current="page" class="tab-btn">Text to ASCII</a>
-    <a role="tab" id="tab-image" href="/image-to-ascii" aria-controls="panel-image" aria-selected="false" class="tab-btn" tabindex="-1">Image to ASCII</a>
+  <nav class="tabbar" aria-label="ASCII tools">
+    <a href="/text-to-ascii" class="tab-btn">Text to ASCII</a>
+    <a href="/image-to-ascii" class="tab-btn" aria-current="page">Image to ASCII</a>
   </nav>
 
-  <!-- ===================== TEXT TO ASCII ===================== -->
-  <section role="tabpanel" id="panel-text" aria-labelledby="tab-text" class="tab-panel active">
-    <div class="text-tool-grid">
-      <div class="text-main-col">
-        <div class="panel preview-panel">
-          <div class="output-toolbar">
-            <div class="toolbar-left">
-              <h2 style="margin:0;">Preview</h2>
-              <span class="edit-hint" id="text-edit-hint" aria-hidden="true">click the art &amp; type</span>
-            </div>
-            <div class="btn-row">
-              <button type="button" id="text-copy" class="icon-btn">Copy</button>
-              <button type="button" id="text-download-txt" class="icon-btn">.txt</button>
-              <button type="button" id="text-download-png" class="icon-btn">.png</button>
-            </div>
-          </div>
-          <div class="ascii-surface ascii-surface--editable" id="text-output-wrap">
-            <pre id="text-output" aria-hidden="true"></pre>
-            <label for="text-input" class="visually-hidden">Your text</label>
-            <textarea id="text-input" class="ghost-input" rows="1" maxlength="200" autocomplete="off" spellcheck="false"></textarea>
-          </div>
-          <span class="copy-flash" id="text-copy-flash">Copied!</span>
-        </div>
-
-        <div class="panel">
-          <h2>Style</h2>
-          <div class="style-controls">
-            <div class="field field--size">
-              <div class="range-label"><span>Size</span><span id="text-size-val">13px</span></div>
-              <input type="range" id="text-size" min="8" max="32" value="13" step="1">
-            </div>
-            <div class="field">
-              <label>Text color</label>
-              <div class="field-row">
-                <input type="color" id="text-color" value="#39ff88">
-                <div class="segmented" role="group" aria-label="Color mode">
-                  <button type="button" id="mode-solid" aria-pressed="true">Solid</button>
-                  <button type="button" id="mode-rainbow" aria-pressed="false">Rainbow</button>
-                </div>
-              </div>
-            </div>
-            <div class="field">
-              <label>Background</label>
-              <div class="segmented" role="group" aria-label="Background">
-                <button type="button" class="bg-opt" data-bg="dark" aria-pressed="true">Dark</button>
-                <button type="button" class="bg-opt" data-bg="light" aria-pressed="false">Light</button>
-                <button type="button" class="bg-opt" data-bg="transparent" aria-pressed="false">Transparent</button>
-              </div>
-            </div>
-            <div class="field field--layout">
-              <label for="layout-select">Layout</label>
-              <select id="layout-select">
-                <option value="default">Default</option>
-                <option value="full">Full width</option>
-                <option value="fitted">Fitted</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="text-side-col">
-        <div class="panel font-list-panel" id="font-list-panel">
-          <div class="panel-head">
-            <h2>Fonts</h2>
-            <button type="button" id="gallery-expand" class="icon-btn" aria-pressed="false" aria-label="Expand font list to full screen">⛶ Expand</button>
-          </div>
-          <div class="gallery" id="font-gallery" aria-label="Font list, grouped by style, click to select"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ===================== IMAGE TO ASCII ===================== -->
-  <section role="tabpanel" id="panel-image" aria-labelledby="tab-image" class="tab-panel" hidden>
+  <section id="panel-image" class="tab-panel active">
     <div class="tool-grid">
       <div class="controls-col">
         <div class="panel">
@@ -241,9 +168,9 @@
   </section>
 
   <section class="container-narrow" style="padding-top:0;">
-    <h2>About this tool</h2>
-    <p>generateascii.com is a free ASCII art generator with two tools in one: a <strong>text-to-ASCII banner generator</strong> built on 59 classic FIGlet fonts, and an <strong>image-to-ASCII converter</strong> that turns photos into character art using canvas-based luminance mapping. Both run entirely client-side — your images and text never leave your browser or touch a server, so there's no upload wait and nothing to worry about privacy-wise.</p>
-    <p>Use it for terminal banners, README headers, Discord/Slack art, git commit art, CLI tool splash screens, or just for fun. Copy the output straight to your clipboard, or export as a .txt file or a rendered .png image.</p>
+    <h2>About the image-to-ASCII converter</h2>
+    <p>This tool turns any <strong>image or photo into ASCII art</strong> by sampling it onto a character grid and mapping each cell's brightness to a character — a technique called luminance mapping. Drop in a JPG, PNG, GIF, or WebP (or paste one from your clipboard), then dial in the width, character set, brightness, contrast, and gamma until it looks right. Choose monochrome or full color, and a dark or light background. All of it runs on a canvas inside your browser, so your images never leave your device.</p>
+    <p>Copy the result to your clipboard, or export it as a <strong>.txt</strong> file or a rendered <strong>.png</strong> image. Want to make a banner from text instead? Try the <a href="/text-to-ascii">text to ASCII generator</a>.</p>
   </section>
 
   <section class="container-narrow" style="padding-top:0;">

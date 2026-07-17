@@ -79,7 +79,9 @@
   (function initTheme() {
     const stored = localStorage.getItem("ga-theme");
     if (stored) document.documentElement.setAttribute("data-theme", stored);
-    document.getElementById("theme-toggle").addEventListener("click", () => {
+    const toggle = document.getElementById("theme-toggle");
+    if (!toggle) return;
+    toggle.addEventListener("click", () => {
       const current =
         document.documentElement.getAttribute("data-theme") ||
         (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -92,16 +94,25 @@
   /* ============================= tabs ============================= */
 
   (function initTabs() {
-    const tabs = [document.getElementById("tab-text"), document.getElementById("tab-image")];
-    const panels = {
-      "tab-text": document.getElementById("panel-text"),
-      "tab-image": document.getElementById("panel-image"),
-    };
+    const tabText = document.getElementById("tab-text");
+    const tabImage = document.getElementById("tab-image");
+    const panelText = document.getElementById("panel-text");
+    const panelImage = document.getElementById("panel-image");
+
+    // In-page tab switching only makes sense on the homepage, which hosts BOTH
+    // panels. Standalone tool pages have a single panel; their identical menu is
+    // pure navigation, so their real <a href> links are left to navigate normally.
+    if (!tabText || !tabImage || !panelText || !panelImage) return;
+
+    const tabs = [tabText, tabImage];
+    const panels = { "tab-text": panelText, "tab-image": panelImage };
 
     function select(tab, { focus = true } = {}) {
       tabs.forEach((t) => {
         const active = t === tab;
         t.setAttribute("aria-selected", String(active));
+        if (active) t.setAttribute("aria-current", "page");
+        else t.removeAttribute("aria-current");
         t.tabIndex = active ? 0 : -1;
         panels[t.id].hidden = !active;
         panels[t.id].classList.toggle("active", active);
@@ -111,7 +122,13 @@
     }
 
     tabs.forEach((tab, i) => {
-      tab.addEventListener("click", () => select(tab));
+      tab.addEventListener("click", (e) => {
+        // Let modified / non-primary clicks open the real page (new tab etc.).
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        select(tab);
+        history.pushState({ tool: tab.id }, "", tab.getAttribute("href"));
+      });
       tab.addEventListener("keydown", (e) => {
         if (e.key === "ArrowRight") select(tabs[(i + 1) % tabs.length]);
         if (e.key === "ArrowLeft") select(tabs[(i - 1 + tabs.length) % tabs.length]);
@@ -120,10 +137,18 @@
       });
     });
 
+    // Back/forward between the clean tool paths (and "/") reflects in the panel.
+    window.addEventListener("popstate", () => {
+      select(/image/.test(location.pathname) ? tabImage : tabText, { focus: false });
+    });
+
     if (loadSession("tab") === "image") select(tabs[1], { focus: false });
   })();
 
-  document.getElementById("year").textContent = new Date().getFullYear();
+  {
+    const yearEl = document.getElementById("year");
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+  }
 
   /* ============================= font loading ============================= */
 
@@ -154,6 +179,7 @@
 
   (function textTool() {
     const textInput = document.getElementById("text-input");
+    if (!textInput) return; // page without the text-to-ASCII tool
     const layoutSelect = document.getElementById("layout-select");
     const sizeSlider = document.getElementById("text-size");
     const sizeVal = document.getElementById("text-size-val");
@@ -503,7 +529,9 @@
     }
     window.addEventListener("resize", debounce(refitAll, 150));
     // Gallery/preview may have rendered while the Image tab was active (zero widths).
-    document.getElementById("tab-text").addEventListener("click", () => requestAnimationFrame(refitAll));
+    // Only present on the homepage, where the Text menu item switches panels.
+    const tabTextBtn = document.getElementById("tab-text");
+    if (tabTextBtn) tabTextBtn.addEventListener("click", () => requestAnimationFrame(refitAll));
 
     /* ---- fullscreen font browsing ---- */
 
@@ -673,6 +701,7 @@
 
   (function imageTool() {
     const dropzone = document.getElementById("dropzone");
+    if (!dropzone) return; // page without the image-to-ASCII tool
     const fileInput = document.getElementById("file-input");
     const sourceThumb = document.getElementById("source-thumb");
     const sourceThumbImg = document.getElementById("source-thumb-img");
