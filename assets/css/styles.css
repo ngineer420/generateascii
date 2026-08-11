@@ -486,6 +486,13 @@ fieldset legend { padding: 0; }
   white-space: pre;
   overflow: hidden;
 }
+/* A tile whose .flf has not been fetched yet. Reserving roughly one tile's
+   worth of height keeps the list's scroll extent close to the loaded layout,
+   so the scrollbar doesn't lurch and scrollGalleryToSelection's offsets land. */
+.gallery-item pre.is-pending {
+  min-height: 64px;
+  color: var(--text-faint);
+}
 
 /* fullscreen font browsing */
 .panel-head {
