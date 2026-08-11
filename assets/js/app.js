@@ -232,6 +232,23 @@
       }
     })();
 
+    // ?font=Doom deep link, used by the per-font landing pages under /fonts/.
+    // Applied after the session restore so an explicit link always wins, and
+    // validated against the catalogue so a junk value cannot 404 a font fetch.
+    (function applyFontParam() {
+      let requested;
+      try {
+        requested = new URLSearchParams(location.search).get("font");
+      } catch (e) {
+        return;
+      }
+      if (!requested) return;
+      const match = FONT_CATALOGUE.find(
+        (f) => f.file.toLowerCase() === requested.toLowerCase()
+      );
+      if (match) selectedFont = match.file;
+    })();
+
     function currentText() {
       return (textInput.value || "").slice(0, 200);
     }
@@ -711,6 +728,7 @@
     const widthSlider = document.getElementById("img-width");
     const widthVal = document.getElementById("img-width-val");
     const rampSelect = document.getElementById("img-ramp");
+    const ditherSelect = document.getElementById("img-dither");
     const customRampField = document.getElementById("img-custom-ramp-field");
     const customRampInput = document.getElementById("img-custom-ramp");
     const brightnessSlider = document.getElementById("img-brightness");
@@ -738,22 +756,63 @@
       binary: " 01",
     };
 
+    // 4x4 Bayer matrix, normalised to -0.5..+0.5 of one ramp step. Used as a
+    // per-pixel threshold nudge so flat areas break into a stable pattern
+    // instead of banding.
+    const BAYER4 = [
+      [0, 8, 2, 10],
+      [12, 4, 14, 6],
+      [3, 11, 1, 9],
+      [15, 7, 13, 5],
+    ];
+
+    const animBar = document.getElementById("img-anim-bar");
+    const animPlayBtn = document.getElementById("img-anim-play");
+    const animFrameInput = document.getElementById("img-anim-frame");
+    const animCountEl = document.getElementById("img-anim-count");
+
     let sourceImage = null;
     let colorMode = "mono"; // "mono" | "color"
     let bgMode = "dark"; // "dark" | "light"
     let lastAsciiText = "";
+    let lastGrid = null; // rendered cells of the current frame, for colour export
     let lastImageDataUrl = null;
     let lastImageMeta = null;
+
+    // Animated sources (GIF) decode to a list of { image, duration } frames.
+    // A still image is simply an empty list and `sourceImage` is used instead.
+    const MAX_FRAMES = 60;
+    let frames = [];
+    let frameIndex = 0;
+    let playing = false;
+    let playTimer = null;
 
     function currentRamp() {
       if (rampSelect.value === "custom") return customRampInput.value || RAMPS.standard;
       return RAMPS[rampSelect.value] || RAMPS.standard;
     }
 
+    function currentDither() {
+      return ditherSelect ? ditherSelect.value : "none";
+    }
+
+    function currentDrawable() {
+      if (frames.length) return frames[Math.min(frameIndex, frames.length - 1)].image;
+      return sourceImage;
+    }
+
+    function drawableSize(d) {
+      return {
+        w: d.naturalWidth || d.width || 1,
+        h: d.naturalHeight || d.height || 1,
+      };
+    }
+
     function persistImageState() {
       const state = {
         width: widthSlider.value,
         ramp: rampSelect.value,
+        dither: ditherSelect ? ditherSelect.value : "none",
         customRamp: customRampInput.value,
         brightness: brightnessSlider.value,
         contrast: contrastSlider.value,
@@ -812,6 +871,9 @@
     });
     sourceClear.addEventListener("click", () => {
       sourceImage = null;
+      releaseFrames();
+      updateAnimBar();
+      lastGrid = null;
       sourceThumb.classList.remove("show");
       fileInput.value = "";
       canvas.style.display = "none";
@@ -825,6 +887,8 @@
 
     function handleFile(file) {
       if (!file.type.startsWith("image/")) return;
+      releaseFrames();
+      updateAnimBar();
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
@@ -845,6 +909,20 @@
         persistImageState();
       };
       reader.readAsDataURL(file);
+
+      // An animated GIF gets a second, richer pass. It resolves after the still
+      // above, so the first frame is on screen while the rest decode.
+      decodeAnimated(file).then((decoded) => {
+        if (!decoded) return;
+        frames = decoded;
+        frameIndex = 0;
+        sourceThumbMeta.textContent =
+          `${file.name || "pasted image"} — ${frames.length} frames`;
+        computeAndRender();
+        updateAnimBar();
+        // Autoplay is motion the visitor did not ask for; honour the OS setting.
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) startPlayback();
+      });
     }
 
     /* ---- controls ---- */
@@ -859,6 +937,12 @@
       scheduleRender();
       persistImageState();
     });
+    if (ditherSelect) {
+      ditherSelect.addEventListener("change", () => {
+        scheduleRender();
+        persistImageState();
+      });
+    }
     customRampInput.addEventListener("input", () => {
       scheduleRender();
       persistImageState();
@@ -917,6 +1001,7 @@
         rampSelect.value = saved.ramp;
         customRampField.style.display = saved.ramp === "custom" ? "" : "none";
       }
+      if (saved.dither && ditherSelect) ditherSelect.value = saved.dither;
       if (typeof saved.customRamp === "string") customRampInput.value = saved.customRamp;
       if (saved.brightness !== undefined) {
         brightnessSlider.value = saved.brightness;
@@ -959,15 +1044,16 @@
 
     /* ---- core pipeline ---- */
 
-    function computeAndRender() {
-      if (!sourceImage) return;
-
+    /**
+     * Sample a drawable down to `columns` wide and turn it into ASCII cells.
+     * Returns { grid, text, columns, rows } and touches no DOM, so an animated
+     * source can call it once per frame without re-reading the controls.
+     */
+    function buildFrame(drawable) {
       const columns = parseInt(widthSlider.value, 10);
       const CHAR_ASPECT = 0.55; // monospace glyph width/height approximation
-      const rows = Math.max(
-        1,
-        Math.round(columns * (sourceImage.naturalHeight / sourceImage.naturalWidth) * CHAR_ASPECT)
-      );
+      const size = drawableSize(drawable);
+      const rows = Math.max(1, Math.round(columns * (size.h / size.w) * CHAR_ASPECT));
 
       const sampleCanvas = document.createElement("canvas");
       sampleCanvas.width = columns;
@@ -975,10 +1061,11 @@
       const sctx = sampleCanvas.getContext("2d", { willReadFrequently: true });
       sctx.imageSmoothingEnabled = true;
       sctx.imageSmoothingQuality = "high";
-      sctx.drawImage(sourceImage, 0, 0, columns, rows);
+      sctx.drawImage(drawable, 0, 0, columns, rows);
 
       const { data } = sctx.getImageData(0, 0, columns, rows);
       const ramp = currentRamp();
+      const dither = currentDither();
       const brightness = parseInt(brightnessSlider.value, 10) * 1.2;
       const contrastRaw = parseInt(contrastSlider.value, 10) * 2.55;
       const contrastFactor = (259 * (contrastRaw + 255)) / (255 * (259 - contrastRaw));
@@ -992,28 +1079,94 @@
         return invert ? 255 - v : v;
       }
 
+      // Pass one: adjusted colour and luminance for every cell. Dithering needs
+      // the whole luminance plane up front because error diffusion writes into
+      // cells it has not reached yet.
+      const total = columns * rows;
+      const lum = new Float32Array(total);
+      const rgb = new Uint8ClampedArray(total * 3);
+      for (let p = 0; p < total; p++) {
+        const i = p * 4;
+        const r = adjust(data[i]);
+        const g = adjust(data[i + 1]);
+        const b = adjust(data[i + 2]);
+        rgb[p * 3] = r;
+        rgb[p * 3 + 1] = g;
+        rgb[p * 3 + 2] = b;
+        lum[p] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      }
+
+      const levels = Math.max(1, ramp.length);
+      const step = 255 / levels;
+
+      // Pass two: quantise to a ramp index, optionally dithering. Both dithers
+      // work on the "darkness" axis (255 - luminance) that the ramp is indexed
+      // by, so a ramp of any length behaves the same way.
+      function quantise(value) {
+        return Math.min(levels - 1, Math.max(0, Math.floor((value / 255) * levels)));
+      }
+
+      const idxs = new Int16Array(total);
+      if (dither === "floyd") {
+        const dark = new Float32Array(total);
+        for (let p = 0; p < total; p++) dark[p] = 255 - lum[p];
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < columns; x++) {
+            const p = y * columns + x;
+            const old = dark[p];
+            const idx = quantise(old);
+            idxs[p] = idx;
+            // Error against the centre of the chosen ramp bucket.
+            const err = old - (idx + 0.5) * step;
+            if (x + 1 < columns) dark[p + 1] += (err * 7) / 16;
+            if (y + 1 < rows) {
+              if (x > 0) dark[p + columns - 1] += (err * 3) / 16;
+              dark[p + columns] += (err * 5) / 16;
+              if (x + 1 < columns) dark[p + columns + 1] += err / 16;
+            }
+          }
+        }
+      } else if (dither === "bayer") {
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < columns; x++) {
+            const p = y * columns + x;
+            const threshold = (BAYER4[y & 3][x & 3] / 16 - 0.5) * step;
+            idxs[p] = quantise(255 - lum[p] + threshold);
+          }
+        }
+      } else {
+        for (let p = 0; p < total; p++) idxs[p] = quantise(255 - lum[p]);
+      }
+
       const grid = [];
       const textRows = [];
       for (let y = 0; y < rows; y++) {
         const rowCells = [];
         let textRow = "";
         for (let x = 0; x < columns; x++) {
-          const i = (y * columns + x) * 4;
-          const r = adjust(data[i]);
-          const g = adjust(data[i + 1]);
-          const b = adjust(data[i + 2]);
-          const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          const idx = Math.min(ramp.length - 1, Math.floor(((255 - lum) / 255) * ramp.length));
-          const ch = ramp[idx] || " ";
+          const p = y * columns + x;
+          const ch = ramp[idxs[p]] || " ";
           textRow += ch;
-          rowCells.push({ ch, r: Math.round(r), g: Math.round(g), b: Math.round(b) });
+          rowCells.push({
+            ch,
+            r: Math.round(rgb[p * 3]),
+            g: Math.round(rgb[p * 3 + 1]),
+            b: Math.round(rgb[p * 3 + 2]),
+          });
         }
         grid.push(rowCells);
         textRows.push(textRow);
       }
-      lastAsciiText = textRows.join("\n");
+      return { grid, text: textRows.join("\n"), columns, rows };
+    }
 
-      drawCanvas(grid, columns, rows);
+    function computeAndRender() {
+      const drawable = currentDrawable();
+      if (!drawable) return;
+      const built = buildFrame(drawable);
+      lastGrid = built.grid;
+      lastAsciiText = built.text;
+      drawCanvas(built.grid, built.columns, built.rows);
     }
 
     function drawCanvas(grid, columns, rows) {
@@ -1052,17 +1205,267 @@
       outputWrap.classList.remove("is-empty");
     }
 
+    /* ---- coloured text output ----
+       The canvas already carried per-cell colour, but Copy and .txt threw it
+       away, so there was no way to get coloured ASCII anywhere but a PNG.
+       These two encodings are the standard ways to keep it as text: spans for
+       the web, 24-bit SGR escapes for a terminal. */
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    }
+
+    function bgHex() {
+      return bgMode === "light" ? "#f5f6f4" : "#0b0d0f";
+    }
+
+    /** Coloured ASCII as an HTML fragment, runs of one colour coalesced. */
+    function gridToHtml(grid) {
+      if (!grid) return "";
+      const mono = monoColorInput.value;
+      const out = [];
+      for (let y = 0; y < grid.length; y++) {
+        const row = grid[y];
+        let buf = "";
+        let color = null;
+        let run = "";
+        const flush = () => {
+          if (!run) return;
+          buf += color ? '<span style="color:' + color + '">' + escapeHtml(run) + "</span>"
+                       : escapeHtml(run);
+          run = "";
+        };
+        for (let x = 0; x < row.length; x++) {
+          const cell = row[x];
+          // A space carries no ink, so it never needs a colour span.
+          const next = cell.ch === " " ? null
+            : colorMode === "color" ? "rgb(" + cell.r + "," + cell.g + "," + cell.b + ")" : mono;
+          if (next !== color) {
+            flush();
+            color = next;
+          }
+          run += cell.ch;
+        }
+        flush();
+        out.push(buf);
+      }
+      return out.join("\n");
+    }
+
+    function htmlDocument(body, title) {
+      return '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
+        '<title>' + escapeHtml(title) + "</title>\n<style>\n" +
+        "html,body{margin:0;background:" + bgHex() + ";}\n" +
+        "pre{margin:0;padding:16px;font-family:" + MONO_STACK +
+        ";font-size:10px;line-height:1.05;white-space:pre;color:" + monoColorInput.value + ";}\n" +
+        "</style>\n</head>\n<body>\n<pre>" + body + "</pre>\n</body>\n</html>\n";
+    }
+
+    /** Coloured ASCII with 24-bit ANSI escapes, reset at the end of each line. */
+    function gridToAnsi(grid) {
+      if (!grid) return "";
+      const rgbOf = (hex) => {
+        const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || "");
+        return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [255, 255, 255];
+      };
+      const mono = rgbOf(monoColorInput.value);
+      const lines = [];
+      for (let y = 0; y < grid.length; y++) {
+        const row = grid[y];
+        let buf = "";
+        let last = null;
+        for (let x = 0; x < row.length; x++) {
+          const cell = row[x];
+          if (cell.ch === " ") {
+            buf += " ";
+            continue;
+          }
+          const c = colorMode === "color" ? [cell.r, cell.g, cell.b] : mono;
+          const key = c[0] + ";" + c[1] + ";" + c[2];
+          if (key !== last) {
+            buf += "[38;2;" + key + "m";
+            last = key;
+          }
+          buf += cell.ch;
+        }
+        lines.push(buf + "[0m");
+      }
+      return lines.join("\n") + "\n";
+    }
+
+    /* ---- animated sources ---- */
+
+    function updateAnimBar() {
+      if (!animBar) return;
+      const animated = frames.length > 1;
+      animBar.hidden = !animated;
+      if (!animated) return;
+      animFrameInput.max = String(frames.length - 1);
+      animFrameInput.value = String(frameIndex);
+      animCountEl.textContent = "frame " + (frameIndex + 1) + " / " + frames.length;
+      animPlayBtn.textContent = playing ? "Pause" : "Play";
+      animPlayBtn.setAttribute("aria-pressed", String(playing));
+    }
+
+    function stopPlayback() {
+      playing = false;
+      clearTimeout(playTimer);
+      playTimer = null;
+      updateAnimBar();
+    }
+
+    function tick() {
+      if (!playing || frames.length < 2) return;
+      frameIndex = (frameIndex + 1) % frames.length;
+      computeAndRender();
+      updateAnimBar();
+      playTimer = setTimeout(tick, frames[frameIndex].duration);
+    }
+
+    function startPlayback() {
+      if (frames.length < 2) return;
+      playing = true;
+      updateAnimBar();
+      playTimer = setTimeout(tick, frames[frameIndex].duration);
+    }
+
+    function releaseFrames() {
+      frames.forEach((f) => {
+        if (f.image && typeof f.image.close === "function") f.image.close();
+      });
+      frames = [];
+      frameIndex = 0;
+      stopPlayback();
+    }
+
+    /**
+     * Decode an animated GIF into frames using the browser's own ImageDecoder.
+     * No library: WebCodecs ships this in Chrome, Edge and Safari 17+. Where it
+     * is missing (Firefox at time of writing) this returns null and the file
+     * falls through to the ordinary still-image path, which shows frame one.
+     */
+    async function decodeAnimated(file) {
+      if (typeof window.ImageDecoder === "undefined") return null;
+      if (!/gif/i.test(file.type)) return null;
+      let decoder;
+      try {
+        decoder = new ImageDecoder({ data: await file.arrayBuffer(), type: file.type });
+        // `tracks.ready` is the one that has to be awaited — `completed` alone
+        // leaves tracks.selectedTrack null and every GIF looks like a still.
+        await decoder.tracks.ready;
+        await decoder.completed;
+        const track = decoder.tracks.selectedTrack;
+        const count = track ? track.frameCount : 1;
+        if (!count || count < 2) {
+          decoder.close();
+          return null;
+        }
+        const out = [];
+        const limit = Math.min(count, MAX_FRAMES);
+        for (let i = 0; i < limit; i++) {
+          const decoded = await decoder.decode({ frameIndex: i });
+          const bitmap = await createImageBitmap(decoded.image);
+          // VideoFrame durations are microseconds; browsers clamp very short
+          // GIF delays the same way, so mirror the usual 20ms floor.
+          const ms = Math.max(20, Math.round((decoded.image.duration || 100000) / 1000));
+          out.push({ image: bitmap, duration: ms });
+          decoded.image.close();
+        }
+        decoder.close();
+        return out;
+      } catch (e) {
+        if (decoder) {
+          try { decoder.close(); } catch (e2) { /* already closed */ }
+        }
+        return null;
+      }
+    }
+
+    if (animPlayBtn) {
+      animPlayBtn.addEventListener("click", () => {
+        if (playing) stopPlayback();
+        else startPlayback();
+      });
+    }
+    if (animFrameInput) {
+      animFrameInput.addEventListener("input", () => {
+        stopPlayback();
+        frameIndex = parseInt(animFrameInput.value, 10) || 0;
+        computeAndRender();
+        updateAnimBar();
+      });
+    }
+
     /* ---- export ---- */
 
     document.getElementById("img-copy").addEventListener("click", () => {
       if (lastAsciiText) copyText(lastAsciiText, copyFlash);
     });
+    const copyAnsiBtn = document.getElementById("img-copy-ansi");
+    if (copyAnsiBtn) {
+      copyAnsiBtn.addEventListener("click", () => {
+        if (lastGrid) copyText(gridToAnsi(lastGrid), copyFlash);
+      });
+    }
     document.getElementById("img-download-txt").addEventListener("click", () => {
       if (lastAsciiText) download("ascii-image.txt", new Blob([lastAsciiText], { type: "text/plain" }));
     });
+    const htmlBtn = document.getElementById("img-download-html");
+    if (htmlBtn) {
+      htmlBtn.addEventListener("click", () => {
+        if (!lastGrid) return;
+        const doc = htmlDocument(gridToHtml(lastGrid), "ASCII art");
+        download("ascii-image.html", new Blob([doc], { type: "text/html" }));
+      });
+    }
+    const ansBtn = document.getElementById("img-download-ans");
+    if (ansBtn) {
+      ansBtn.addEventListener("click", () => {
+        if (!lastGrid) return;
+        download("ascii-image.ans", new Blob([gridToAnsi(lastGrid)], { type: "text/plain" }));
+      });
+    }
     document.getElementById("img-download-png").addEventListener("click", () => {
       if (!lastAsciiText) return;
       canvas.toBlob((blob) => download("ascii-image.png", blob), "image/png");
     });
+
+    const animDownloadBtn = document.getElementById("img-download-anim");
+    if (animDownloadBtn) {
+      animDownloadBtn.addEventListener("click", () => {
+        if (frames.length < 2) return;
+        const wasPlaying = playing;
+        const wasIndex = frameIndex;
+        stopPlayback();
+        // Re-run the pipeline for every frame at the current settings so the
+        // exported file matches exactly what is on screen.
+        const html = [];
+        const delays = [];
+        for (let i = 0; i < frames.length; i++) {
+          frameIndex = i;
+          html.push(gridToHtml(buildFrame(frames[i].image).grid));
+          delays.push(frames[i].duration);
+        }
+        frameIndex = wasIndex;
+        computeAndRender();
+        if (wasPlaying) startPlayback();
+        else updateAnimBar();
+
+        const doc = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
+          "<title>ASCII animation</title>\n<style>\n" +
+          "html,body{margin:0;background:" + bgHex() + ";}\n" +
+          "pre{margin:0;padding:16px;font-family:" + MONO_STACK +
+          ";font-size:10px;line-height:1.05;white-space:pre;color:" + monoColorInput.value + ";}\n" +
+          "</style>\n</head>\n<body>\n<pre id=\"f\"></pre>\n<script>\n" +
+          "var F=" + JSON.stringify(html) + ",D=" + JSON.stringify(delays) + ",i=0," +
+          "e=document.getElementById('f');\n" +
+          "var still=matchMedia('(prefers-reduced-motion: reduce)').matches;\n" +
+          "e.innerHTML=F[0];\n" +
+          "if(!still&&F.length>1){(function n(){e.innerHTML=F[i];" +
+          "i=(i+1)%F.length;setTimeout(n,D[i]||100)})()}\n" +
+          "<\/script>\n</body>\n</html>\n";
+        download("ascii-animation.html", new Blob([doc], { type: "text/html" }));
+      });
+    }
   })();
 })();
