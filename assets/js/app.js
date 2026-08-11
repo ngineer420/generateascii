@@ -523,6 +523,7 @@
     })();
 
     function fitTilePre(pre) {
+      if (pre.classList.contains("is-pending")) return; // no art yet; nothing to fit
       const w = pre.clientWidth;
       if (!w) return; // tab hidden; refitted when it becomes visible
       const cols = Math.max(1, ...pre.textContent.split("\n").map((l) => l.length));
@@ -573,11 +574,60 @@
       }
     });
 
+    /* ---- lazy tile art ----
+       Every one of the 59 buttons is in the DOM from the first paint, so the
+       layout is stable and the list is crawlable — but a tile's .flf (678 KB
+       across the catalogue) is only fetched once the tile is about to scroll
+       into view. `ensureFont` memoises the in-flight promise per font, so
+       scrolling down and back up never refetches one. */
+
+    let galleryText = "ASCII"; // the string the tiles are rendering right now
+
+    function paintTile(btn) {
+      const pre = btn.querySelector("pre");
+      const font = btn.dataset.font;
+      const text = galleryText; // freeze: a re-render may land before this resolves
+      ensureFont(font)
+        .then(() => {
+          try {
+            // Trailing whitespace is invisible but widens scrollWidth,
+            // which would skew the fit — strip it for the tile preview.
+            pre.textContent = renderFigletSync(text, font, "default")
+              .split("\n").map((l) => l.replace(/\s+$/, "")).join("\n");
+          } catch {
+            pre.textContent = "(unsupported characters)";
+          }
+        })
+        .catch(() => {
+          pre.textContent = "(failed to load)";
+        })
+        .then(() => {
+          pre.classList.remove("is-pending");
+          fitTilePre(pre);
+        });
+    }
+
+    // The gallery is its own scroll container, so it — not the viewport — is
+    // the observer root; a rootMargin far taller than the list means a font is
+    // already parsed by the time you reach it. Without IntersectionObserver
+    // (no supporting browser we target, but be safe) every tile just loads.
+    const galleryObserver = "IntersectionObserver" in window
+      ? new IntersectionObserver((entries, obs) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            obs.unobserve(entry.target); // one load per tile
+            paintTile(entry.target);
+          });
+        }, { root: galleryEl, rootMargin: "600px 0px" })
+      : null;
+
     // Grouped by category, in catalogue order — mirrors how fonts used to be
     // organized under the (now-removed) font <select>'s optgroups.
     async function renderGallery() {
+      if (galleryObserver) galleryObserver.disconnect(); // the old tiles are about to go
       galleryEl.innerHTML = "";
       const text = currentText() || "ASCII";
+      galleryText = text;
       let lastCategory = null;
 
       FONT_CATALOGUE.forEach((f) => {
@@ -594,7 +644,7 @@
         btn.className = "gallery-item";
         btn.dataset.font = f.file;
         btn.setAttribute("aria-pressed", String(f.file === selectedFont));
-        btn.innerHTML = `<pre>Loading…</pre><span class="font-name">${f.file}</span>`;
+        btn.innerHTML = `<pre class="is-pending">Loading…</pre><span class="font-name">${f.file}</span>`;
         btn.addEventListener("click", () => {
           selectedFont = f.file;
           updateMainPreview();
@@ -611,24 +661,8 @@
         });
         galleryEl.appendChild(btn);
 
-        ensureFont(f.file)
-          .then(() => {
-            const pre = btn.querySelector("pre");
-            try {
-              // Trailing whitespace is invisible but widens scrollWidth,
-              // which would skew the fit — strip it for the tile preview.
-              pre.textContent = renderFigletSync(text, f.file, "default")
-                .split("\n").map((l) => l.replace(/\s+$/, "")).join("\n");
-            } catch {
-              pre.textContent = "(unsupported characters)";
-            }
-            fitTilePre(pre);
-          })
-          .catch(() => {
-            const pre = btn.querySelector("pre");
-            pre.textContent = "(failed to load)";
-            fitTilePre(pre);
-          });
+        if (galleryObserver) galleryObserver.observe(btn);
+        else paintTile(btn);
       });
     }
 

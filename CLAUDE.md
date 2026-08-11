@@ -27,7 +27,10 @@ GitHub Pages at generateascii.com.
 - `assets/js/figlet.min.js` — vendored figlet.js browser build.
 - `assets/js/fonts-manifest.js` — curated 59-font catalogue, grouped by style.
 - `assets/fonts/*.flf` — vendored FIGlet fonts (from the `figlet` npm package, MIT).
-  Loaded **lazily per style group** on demand.
+  678 KB across the 59, so they are **fetched one tile at a time**: `ensureFont`
+  memoises the in-flight promise per font, and the gallery's `IntersectionObserver`
+  (root = the gallery's own scroll container, `rootMargin: 600px`) only calls it when
+  a tile is about to scroll into view. All 59 buttons still render on the first paint.
 - `privacy.html` / `terms.html` — required for ad networks; keep them working.
 
 Serve locally with any static server (`python3 -m http.server 8000`). To verify
@@ -91,6 +94,9 @@ output. Don't show fake sample text that could be mistaken for real content.
 current text in that font (live). It's grouped by style. There's an **Expand** button
 for fullscreen browsing; picking a font in fullscreen selects it and drops back out.
 We removed the font filter/search deliberately (PR #6/#7) — the grouped list is the nav.
+A tile that hasn't fetched its font yet shows `Loading…` in a `pre.is-pending`, whose
+`min-height` reserves roughly a tile's worth of height — that keeps the list's scroll
+extent (and so `scrollGalleryToSelection`'s offsets) close to the loaded layout.
 
 **No horizontal page overflow, ever.** Wide figlet art has caused mobile page overflow
 before. Tiles fit art to width; scrolling lives inside `overflow-x: auto` containers at
