@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>figfont.py vs figlet.js</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<style>
+  body { font: 14px ui-monospace, Menlo, monospace; background: #0b0d0f; color: #e6e8eb; padding: 24px; }
+  h1 { font-size: 16px; }
+  .ok { color: #39ff88; }
+  .bad { color: #ff5f56; }
+  pre { background: #08090a; padding: 12px; overflow-x: auto; white-space: pre; }
+</style>
+</head>
+<body>
+<h1>tools/figfont.py vs assets/js/figlet.min.js</h1>
+<p>
+  Run <code>python3 tools/check_figfont.py</code> first, serve the repo root
+  (<code>python3 -m http.server 8000</code>), then open
+  <code>/tools/check_figfont.html</code>. Every font in the catalogue is rendered
+  by both engines and compared character for character.
+</p>
+<p id="status">Running…</p>
+<pre id="detail"></pre>
+
+<script src="/assets/js/figlet.min.js"></script>
+<script src="/assets/js/fonts-manifest.js"></script>
+<script>
+window.runFigfontCheck = async function () {
+  const status = document.getElementById("status");
+  const detail = document.getElementById("detail");
+  let blob;
+  try {
+    blob = await (await fetch("/tools/.figfont-expected.json")).json();
+  } catch (e) {
+    status.className = "bad";
+    status.textContent = "Could not load /tools/.figfont-expected.json — run tools/check_figfont.py first.";
+    return { error: "no expectations" };
+  }
+  const corpus = blob.corpus;
+  const expected = blob.data;
+  const bad = [];
+  let checked = 0;
+
+  for (const entry of FONT_CATALOGUE) {
+    const name = entry.file;
+    const res = await fetch("/assets/fonts/" + encodeURIComponent(name) + ".flf");
+    figlet.parseFont(name, await res.text());
+    const compare = (key, text, layout) => {
+      const opts = { font: name };
+      if (layout) opts.horizontalLayout = layout;
+      const js = figlet.textSync(text, opts).split("\n");
+      checked++;
+      if (JSON.stringify(js) !== JSON.stringify(expected[name][key])) {
+        bad.push({ font: name, key: key, text: text, js: js, py: expected[name][key] });
+      }
+    };
+    corpus.forEach((text, i) => {
+      compare("c" + i, text);
+      compare("c" + i + "-fit", text, "fitted");
+      compare("c" + i + "-full", text, "full");
+    });
+    compare("nm", name);
+  }
+
+  const summary = checked + " comparisons, " + bad.length + " mismatch(es)";
+  status.className = bad.length ? "bad" : "ok";
+  status.textContent = summary;
+  detail.textContent = bad.slice(0, 5).map(function (b) {
+    return b.font + " / " + b.key + " (" + JSON.stringify(b.text) + ")\n" +
+      "js:\n" + b.js.join("\n") + "\npy:\n" + b.py.join("\n");
+  }).join("\n\n");
+  return { checked: checked, mismatches: bad.length };
+};
+window.runFigfontCheck();
+</script>
+</body>
+</html>

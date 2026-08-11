@@ -35,6 +35,7 @@
 </script>
   
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7560786263587509" crossorigin="anonymous"></script>
+<script>try{var t=localStorage.getItem("ga-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -62,6 +63,7 @@
     <a role="tab" id="tab-text" href="/text-to-ascii" aria-controls="panel-text" aria-selected="true" aria-current="page" class="tab-btn">Text to ASCII</a>
     <a role="tab" id="tab-image" href="/image-to-ascii" aria-controls="panel-image" aria-selected="false" class="tab-btn" tabindex="-1">Image to ASCII</a>
   </nav>
+  <p class="tabbar-aside"><a href="/fonts/">Browse all 59 FIGlet fonts, one page each →</a></p>
 
   <!-- ===================== TEXT TO ASCII ===================== -->
   <section role="tabpanel" id="panel-text" aria-labelledby="tab-text" class="tab-panel active">
@@ -172,6 +174,14 @@
                 <option value="custom">Custom…</option>
               </select>
             </div>
+            <div class="field">
+              <label for="img-dither">Dithering</label>
+              <select id="img-dither">
+                <option value="none">None</option>
+                <option value="floyd">Floyd–Steinberg</option>
+                <option value="bayer">Ordered (Bayer 4×4)</option>
+              </select>
+            </div>
             <div class="field" id="img-custom-ramp-field" style="display:none;">
               <label for="img-custom-ramp">Custom ramp (light → dark)</label>
               <input type="text" id="img-custom-ramp" value=" .:-=+*#%@">
@@ -204,13 +214,23 @@
             <h2 style="margin:0;">Preview</h2>
             <div class="btn-row">
               <button type="button" id="img-copy" class="icon-btn">Copy</button>
+              <button type="button" id="img-copy-ansi" class="icon-btn" title="Copy with 24-bit ANSI colour escapes for a terminal">Copy ANSI</button>
               <button type="button" id="img-download-txt" class="icon-btn">.txt</button>
+              <button type="button" id="img-download-html" class="icon-btn" title="Coloured ASCII as a standalone HTML file">.html</button>
+              <button type="button" id="img-download-ans" class="icon-btn" title="ANSI-coloured text for a terminal">.ans</button>
               <button type="button" id="img-download-png" class="icon-btn">.png</button>
             </div>
           </div>
           <div class="ascii-surface is-empty" id="img-output-wrap">
             <span id="img-empty-msg">Upload an image to see it converted to ASCII art here.</span>
             <canvas id="img-canvas" style="display:none;"></canvas>
+          </div>
+          <div class="anim-bar" id="img-anim-bar" hidden>
+            <button type="button" id="img-anim-play" class="icon-btn" aria-pressed="false">Play</button>
+            <label class="visually-hidden" for="img-anim-frame">Frame</label>
+            <input type="range" id="img-anim-frame" min="0" max="0" value="0" step="1">
+            <span class="anim-count" id="img-anim-count">frame 1 / 1</span>
+            <button type="button" id="img-download-anim" class="icon-btn" title="Standalone HTML page that plays the ASCII animation">Animated .html</button>
           </div>
           <span class="copy-flash" id="img-copy-flash">Copied!</span>
         </div>
