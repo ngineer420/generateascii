@@ -187,6 +187,8 @@ label { display: block; font-size: 12.5px; color: var(--text-dim); margin-bottom
   --tb-text-dim: var(--text-dim);
   --tb-accent: var(--accent);
   --tb-focus: var(--focus);
+  --tb-sheet-radius: 0;
+  --tb-sheet-shadow: none;
 
   /* A stacking context, so the sheet lands above the tool's own positioned
      bits (the fullscreen gallery, tile menus) without a z-index arms race. */
@@ -225,6 +227,11 @@ label { display: block; font-size: 12.5px; color: var(--text-dim); margin-bottom
    multi-row header in the audit; nowrap makes those faults impossible. ---- */
 .tb-rail {
   flex: 1 1 auto; min-width: 0;
+  /* The offsetParent of a chip. Without it that is `.toolbar`, so the
+     centre-on-current JS adds the trigger's width to its scroll target and the
+     active chip lands with its first letters under the left fade — exactly the
+     clipped label this pattern exists to prevent. */
+  position: relative;
   display: flex; flex-wrap: nowrap; gap: 0;
   margin: 0; padding: 0; list-style: none;
   overflow-x: auto; overflow-y: hidden;
@@ -273,8 +280,11 @@ label { display: block; font-size: 12.5px; color: var(--text-dim); margin-bottom
   overflow-y: auto; overscroll-behavior: contain;
   background: var(--tb-bg-elev);
   border: 1px solid var(--tb-border);
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .5);
+  /* Radius and shadow are site-owned: a hard-edged idiom reads wrong with a
+     soft drop shadow and a 12px corner. Structure stays identical portfolio-
+     wide; only these two tokens move. */
+  border-radius: var(--tb-sheet-radius, 0 0 12px 12px);
+  box-shadow: var(--tb-sheet-shadow, 0 8px 24px rgba(0, 0, 0, .12));
   padding: 14px 4px;
   columns: 2; column-gap: 24px;
 }
