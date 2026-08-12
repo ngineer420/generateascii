@@ -20,6 +20,7 @@
 
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/styles.css">
+<script src="/assets/js/toolbar.js" defer></script>
 <script>try{var t=localStorage.getItem("ga-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 
 <script type="application/ld+json">
@@ -55,12 +56,33 @@
     </div>
   </div>
 </header>
+
+<!-- nav:start -->
+<nav class="toolbar" aria-label="Tools">
+  <details class="tb-menu">
+    <summary class="tb-trigger" aria-label="All 3 tools">
+      <span class="tb-glyph" aria-hidden="true">&#9636;</span>
+      <span class="tb-label">All 3<span class="tb-label-long"> tools</span></span>
+    </summary>
+    <div class="tb-sheet is-flat">
+      <ul>
+        <li><a href="/text-to-ascii">Text to ASCII</a></li>
+        <li><a href="/image-to-ascii">Image to ASCII</a></li>
+        <li><a href="/fonts/" aria-current="page">Font Gallery</a></li>
+      </ul>
+      <p class="tb-hub"><a href="/fonts/" aria-current="page">All 59 fonts →</a></p>
+    </div>
+  </details>
+  <div class="tb-scrim"></div>
+  <ul class="tb-rail">
+    <li><a href="/text-to-ascii">Text</a></li>
+    <li><a href="/image-to-ascii">Image</a></li>
+    <li><a href="/fonts/" aria-current="page">Fonts</a></li>
+  </ul>
+</nav>
+<!-- nav:end -->
+
 <main id="main">
-  <nav class="tabbar" aria-label="ASCII tools">
-    <a href="/text-to-ascii" class="tab-btn">Text to ASCII</a>
-    <a href="/image-to-ascii" class="tab-btn">Image to ASCII</a>
-    <a href="/fonts/" class="tab-btn" aria-current="page">Font gallery</a>
-  </nav>
 
   <div class="hero">
     <h1>ASCII Art Font Gallery</h1>

@@ -6,10 +6,45 @@
 <title>404 — generateascii.com</title>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/styles.css">
+<script src="/assets/js/toolbar.js" defer></script>
 <script>try{var t=localStorage.getItem("ga-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
-<main class="container-narrow" style="text-align:center;">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="generateascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+    </a>
+  </div>
+</header>
+
+<!-- nav:start -->
+<nav class="toolbar" aria-label="Tools">
+  <details class="tb-menu">
+    <summary class="tb-trigger" aria-label="All 3 tools">
+      <span class="tb-glyph" aria-hidden="true">&#9636;</span>
+      <span class="tb-label">All 3<span class="tb-label-long"> tools</span></span>
+    </summary>
+    <div class="tb-sheet is-flat">
+      <ul>
+        <li><a href="/text-to-ascii">Text to ASCII</a></li>
+        <li><a href="/image-to-ascii">Image to ASCII</a></li>
+        <li><a href="/fonts/">Font Gallery</a></li>
+      </ul>
+      <p class="tb-hub"><a href="/fonts/">All 59 fonts →</a></p>
+    </div>
+  </details>
+  <div class="tb-scrim"></div>
+  <ul class="tb-rail">
+    <li><a href="/text-to-ascii">Text</a></li>
+    <li><a href="/image-to-ascii">Image</a></li>
+    <li><a href="/fonts/">Fonts</a></li>
+  </ul>
+</nav>
+<!-- nav:end -->
+
+<main id="main" class="container-narrow" style="text-align:center;">
   <pre style="font-size:12px;line-height:1.1;color:var(--accent);">
  _  _    ___  _  _
 | || |  / _ \| || |

@@ -91,58 +91,73 @@
     });
   })();
 
-  /* ============================= tabs ============================= */
+  /* ==================== homepage instant tool switch ====================
+     The toolbar's links are real navigation on every page. The homepage is the
+     one page that mounts BOTH panels, so there a plain left-click swaps the
+     panel in place and pushes the tool's clean URL instead. Both the rail and
+     the sheet are wired, so the two routes to a tool behave identically.
 
-  (function initTabs() {
-    const tabText = document.getElementById("tab-text");
-    const tabImage = document.getElementById("tab-image");
+     This is no longer a tablist: the roving tabindex that came with that
+     pattern shipped the Image link with tabindex="-1", i.e. out of tab order
+     entirely, and announced site navigation as tabs. Portfolio spec #13
+     forbids porting it. */
+
+  (function initToolPanels() {
+    const bar = document.querySelector(".toolbar");
     const panelText = document.getElementById("panel-text");
     const panelImage = document.getElementById("panel-image");
+    // A standalone tool page mounts one panel — its links are plain navigation
+    // and there is nothing here to do.
+    if (!bar || !panelText || !panelImage) return;
 
-    // In-page tab switching only makes sense on the homepage, which hosts BOTH
-    // panels. Standalone tool pages have a single panel; their identical menu is
-    // pure navigation, so their real <a href> links are left to navigate normally.
-    if (!tabText || !tabImage || !panelText || !panelImage) return;
+    const PANEL_FOR = { "/text-to-ascii": panelText, "/image-to-ascii": panelImage };
+    const links = Array.from(bar.querySelectorAll(".tb-rail a[href], .tb-sheet a[href]"));
 
-    const tabs = [tabText, tabImage];
-    const panels = { "tab-text": panelText, "tab-image": panelImage };
-
-    function select(tab, { focus = true } = {}) {
-      tabs.forEach((t) => {
-        const active = t === tab;
-        t.setAttribute("aria-selected", String(active));
-        if (active) t.setAttribute("aria-current", "page");
-        else t.removeAttribute("aria-current");
-        t.tabIndex = active ? 0 : -1;
-        panels[t.id].hidden = !active;
-        panels[t.id].classList.toggle("active", active);
-      });
-      saveSession("tab", tab.id === "tab-image" ? "image" : "text");
-      if (focus) tab.focus();
+    function cleanPath(pathname) {
+      const p = pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/\/+$/, "");
+      return p || "/";
+    }
+    function panelFor(pathname) {
+      return PANEL_FOR[cleanPath(pathname)] || null;
     }
 
-    tabs.forEach((tab, i) => {
-      tab.addEventListener("click", (e) => {
-        // Let modified / non-primary clicks open the real page (new tab etc.).
-        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-        e.preventDefault();
-        select(tab);
-        history.pushState({ tool: tab.id }, "", tab.getAttribute("href"));
+    function activate(href, push) {
+      const panel = panelFor(href) || panelText;
+      [panelText, panelImage].forEach((el) => {
+        const on = el === panel;
+        el.hidden = !on;
+        el.classList.toggle("active", on);
       });
-      tab.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowRight") select(tabs[(i + 1) % tabs.length]);
-        if (e.key === "ArrowLeft") select(tabs[(i - 1 + tabs.length) % tabs.length]);
-        if (e.key === "Home") select(tabs[0]);
-        if (e.key === "End") select(tabs[tabs.length - 1]);
+      // "page" only for a link that really points here. On "/" — which mounts
+      // both panels and is not itself a tool URL — the tool on screen gets
+      // "true": the current item in the set, not a link to the current page.
+      const here = cleanPath(href);
+      links.forEach((a) => {
+        const to = a.getAttribute("href");
+        if (cleanPath(to) === here) a.setAttribute("aria-current", "page");
+        else if (PANEL_FOR[cleanPath(to)] === panel) a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
       });
+      saveSession("tab", panel === panelImage ? "image" : "text");
+      if (push) history.pushState({ tool: here }, "", href);
+    }
+
+    bar.addEventListener("click", (e) => {
+      const link = e.target.closest("a[href]");
+      if (!link || !bar.contains(link) || e.defaultPrevented) return;
+      // Let modified / non-primary clicks open the real page (new tab etc.).
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (!panelFor(link.getAttribute("href"))) return;   // /fonts/ is a real page
+      e.preventDefault();
+      activate(link.getAttribute("href"), true);
+      const menu = bar.querySelector("details.tb-menu");
+      if (menu) menu.open = false;
     });
 
     // Back/forward between the clean tool paths (and "/") reflects in the panel.
-    window.addEventListener("popstate", () => {
-      select(/image/.test(location.pathname) ? tabImage : tabText, { focus: false });
-    });
+    window.addEventListener("popstate", () => activate(location.pathname, false));
 
-    if (loadSession("tab") === "image") select(tabs[1], { focus: false });
+    activate(loadSession("tab") === "image" ? "/image-to-ascii" : location.pathname, false);
   })();
 
   {
@@ -546,10 +561,16 @@
       if (output.classList.contains("is-placeholder")) fitPlaceholderSize();
     }
     window.addEventListener("resize", debounce(refitAll, 150));
-    // Gallery/preview may have rendered while the Image tab was active (zero widths).
-    // Only present on the homepage, where the Text menu item switches panels.
-    const tabTextBtn = document.getElementById("tab-text");
-    if (tabTextBtn) tabTextBtn.addEventListener("click", () => requestAnimationFrame(refitAll));
+    // Gallery/preview may have rendered while the Image panel was active (zero
+    // widths). Only the homepage switches panels in place, and it does it from
+    // the toolbar now, so that is where the refit hangs.
+    const toolbar = document.querySelector(".toolbar");
+    if (toolbar && document.getElementById("panel-image")) {
+      toolbar.addEventListener("click", (e) => {
+        const link = e.target.closest('a[href="/text-to-ascii"]');
+        if (link) requestAnimationFrame(refitAll);
+      });
+    }
 
     /* ---- fullscreen font browsing ---- */
 

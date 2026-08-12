@@ -10,10 +10,11 @@ GitHub Pages at generateascii.com.
 - `index.html` — landing page; both tool panels, About + Learn More sections.
 - `text-to-ascii.html` / `image-to-ascii.html` — standalone per-tool pages with their
   own `<title>`/`<meta>`/canonical for SEO. They share the same markup and `app.js`;
-  the difference is which panel opens `active`. The tab bar links are real `<a href>`s
-  to these URLs (crawlable), not just JS tab switches. **Keep all three panel markups
-  in sync** — an edit to a control in `index.html` almost always needs the same edit
-  in the matching per-tool page.
+  the difference is which panel opens `active`. The toolbar's links are real `<a href>`s
+  to these URLs (crawlable); only the homepage, which mounts both panels, intercepts a
+  plain click and swaps in place. **Keep all three panel markups in sync** — an edit to
+  a control in `index.html` almost always needs the same edit in the matching per-tool
+  page.
 - `fonts/` — **generated, do not hand-edit.** One landing page per FIGlet font
   (`fonts/<slug>/index.html` plus a byte-identical flat `fonts/<slug>.html`), and
   an index at `fonts/index.html` / `fonts.html`. Everything under `fonts/`, plus
@@ -22,7 +23,7 @@ GitHub Pages at generateascii.com.
 - `tools/` — the page generator and its FIGlet engine (Python 3, stdlib only, not
   shipped to the browser). See "Per-font pages" below.
 - `articles/` — 4 SEO/content articles linked from the Learn More section.
-- `assets/js/app.js` — all logic (~1000 lines): tabs, font gallery, editable preview,
+- `assets/js/app.js` — all logic (~1000 lines): homepage panel switching, font gallery, editable preview,
   canvas image pipeline, export, session persistence.
 - `assets/js/figlet.min.js` — vendored figlet.js browser build.
 - `assets/js/fonts-manifest.js` — curated 59-font catalogue, grouped by style.
@@ -67,6 +68,38 @@ comparisons, and the expected result is zero mismatches.
 `/fonts/<slug>/` links into the main tool as `/text-to-ascii?font=<Font Name>`;
 `app.js` reads that parameter, validates it against `FONT_CATALOGUE`, and applies
 it after the sessionStorage restore so an explicit link always wins.
+
+## Navigation — one toolbar, one data file
+
+The nav is the portfolio toolbar (spec: ngineer420.github.io#13, reference
+implementation: photoshrink#7), a direct child of `<body>` right after
+`</header>` — not a tab strip inside `<main>`.
+
+- `tools/nav_data.py` holds TOOLS/GROUPS/HUBS/VARIANTS and is the only per-site
+  file. `tools/sync_nav.py` is generic and copied verbatim from photoshrink —
+  do not fork it.
+- `python3 tools/sync_nav.py` rewrites the `<!-- nav:start -->…<!-- nav:end -->`
+  region in the nine hand-written pages; `--check` exits nonzero on drift.
+  `build_font_pages.py` imports the same `sync_nav.render_nav` for the 123
+  generated ones, so both `--check`s guard identical markup.
+- The **three tools** are tier 1 (rail + flat sheet). The **59 font pages** are
+  tier 2: out of the rail and the sheet body, reached by the sheet's one hub
+  link to `/fonts/` plus the `.font-switch` chip cluster under each font page's
+  h1. The gallery chip carries `aria-current="true"` on a font page so the rail
+  is never unselected on the site's highest-traffic page shape.
+- `nav_data.py` reads the font list from `assets/js/fonts-manifest.js` with the
+  same rule the generator uses, and the build asserts the two agree — so the
+  "All 59 fonts" label in the chrome cannot go stale.
+- Rail labels are deliberately short ("Text", "Image", "Fonts"): the page font
+  is monospace, and the full names plus the trigger are 500px of chips on a
+  390px phone. The sheet carries the long names.
+- `assets/js/toolbar.js` is the toolbar's enhancement script, a separate file
+  because the font pages load `font-page.js` and the legal/article pages load
+  no page JS at all.
+- Nothing in the chrome is sticky — a sticky header can overlay an AdSense
+  anchor unit. Header + 45px bar is 96px of chrome on every page.
+- There is no `role="tablist"` anywhere any more, and it must not come back:
+  the roving tabindex it required shipped the Image link out of tab order.
 
 ## UX decisions (we iterated to these — don't regress them)
 
@@ -155,7 +188,7 @@ persisted the same way.
 
 - Vanilla HTML/CSS/JS, no framework, no build. Match the existing style.
 - `assets/css/styles.css` is the whole design system — one file.
-- When adding a tool page or article, update the tab nav (if a tool),
+- When adding a tool page or article, update `tools/nav_data.py` (if a tool),
   `sitemap.xml`, and the Learn More list (if an article). `sitemap.xml` is
   rewritten by `tools/build_font_pages.py`, so add non-font URLs to the `rows`
   list in that script's `sitemap()` rather than editing the XML by hand.
