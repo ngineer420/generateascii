@@ -20,6 +20,7 @@
 
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/styles.css">
+<script src="/assets/js/toolbar.js" defer></script>
 <script>try{var t=localStorage.getItem("ga-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 
 <script type="application/ld+json">
@@ -55,17 +56,50 @@
     </div>
   </div>
 </header>
-<main id="main">
-  <nav class="tabbar" aria-label="ASCII tools">
-    <a href="/text-to-ascii" class="tab-btn">Text to ASCII</a>
-    <a href="/image-to-ascii" class="tab-btn">Image to ASCII</a>
-    <a href="/fonts/" class="tab-btn" aria-current="page">Font gallery</a>
-  </nav>
 
+<!-- nav:start -->
+<nav class="toolbar" aria-label="Tools">
+  <details class="tb-menu">
+    <summary class="tb-trigger" aria-label="All 3 tools">
+      <span class="tb-glyph" aria-hidden="true">&#9636;</span>
+      <span class="tb-label">All 3<span class="tb-label-long"> tools</span></span>
+    </summary>
+    <div class="tb-sheet is-flat">
+      <ul>
+        <li><a href="/text-to-ascii">Text to ASCII</a></li>
+        <li><a href="/image-to-ascii">Image to ASCII</a></li>
+        <li><a href="/fonts/" aria-current="true">Font Gallery</a></li>
+      </ul>
+      <p class="tb-hub"><a href="/fonts/">All 59 fonts →</a></p>
+    </div>
+  </details>
+  <div class="tb-scrim"></div>
+  <ul class="tb-rail">
+    <li><a href="/text-to-ascii">Text</a></li>
+    <li><a href="/image-to-ascii">Image</a></li>
+    <li><a href="/fonts/" aria-current="true">Fonts</a></li>
+  </ul>
+</nav>
+<!-- nav:end -->
+
+<main id="main">
   <div class="hero">
     <h1>Shadow ASCII Art Generator</h1>
     <p>Turn any text into ASCII art with the <strong>Shadow</strong> FIGlet font — free, instant, and processed entirely in your browser.</p>
   </div>
+  <nav class="font-switch" aria-labelledby="font-switch-label">
+    <span class="font-switch-label" id="font-switch-label">Decorative fonts</span>
+    <ul>
+      <li><a class="chip" href="/fonts/shadow/" aria-current="page">Shadow</a></li>
+      <li><a class="chip" href="/fonts/graffiti/">Graffiti</a></li>
+      <li><a class="chip" href="/fonts/gothic/">Gothic</a></li>
+      <li><a class="chip" href="/fonts/fraktur/">Fraktur</a></li>
+      <li><a class="chip" href="/fonts/script/">Script</a></li>
+      <li><a class="chip" href="/fonts/cursive/">Cursive</a></li>
+      <li><a class="chip" href="/fonts/nv-script/">NV Script</a></li>
+      <li><a class="chip chip-all" href="/fonts/">All 59 fonts →</a></li>
+    </ul>
+  </nav>
 
   <div class="panel">
     <h2>Shadow preview</h2>
@@ -114,18 +148,6 @@
     <h2>What Shadow looks like, and when to use it</h2>
     <p>Shadow is one of 59 FIGlet fonts on this site. FIGlet fonts are not typefaces in the usual sense: each one is a small file describing how to draw every character out of ordinary text symbols, 5 lines tall, so the result is plain text you can paste anywhere a monospace font renders — a terminal banner, a README, a code comment, an IRC channel.</p>
     <p>This font draws its characters 5 lines high and joins them using smushed (universal) layout, which is the setting the font's own author chose. It has its own lowercase glyphs, so mixed-case text keeps its shape. Wide art is the usual gotcha: a banner that looks right in a full-width terminal will wrap badly in a narrow one, so check the width of your text before you paste it somewhere fixed.</p>
-  </section>
-  <section class="container-narrow related-fonts" style="padding-left:0;padding-right:0;">
-    <h2>More decorative fonts</h2>
-    <ul class="font-links">
-      <li><a href="/fonts/graffiti/">Graffiti</a></li>
-      <li><a href="/fonts/gothic/">Gothic</a></li>
-      <li><a href="/fonts/fraktur/">Fraktur</a></li>
-      <li><a href="/fonts/script/">Script</a></li>
-      <li><a href="/fonts/cursive/">Cursive</a></li>
-      <li><a href="/fonts/nv-script/">NV Script</a></li>
-      <li><a href="/fonts/">All 59 fonts</a></li>
-    </ul>
   </section>
 </main>
 <footer class="site-footer">

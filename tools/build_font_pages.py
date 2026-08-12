@@ -39,6 +39,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from figfont import FigFont  # noqa: E402
+import nav_data as NAV  # noqa: E402
+import sync_nav  # noqa: E402  — the toolbar renderer, shared with the hand-written pages
 
 SITE = "https://generateascii.com"
 FONT_DIR = os.path.join(ROOT, "assets", "fonts")
@@ -100,7 +102,7 @@ def pick_hero(font, name):
     return None
 
 
-def head(title, description, url, ld_name, ld_description):
+def head(title, description, url, nav_url, ld_name, ld_description):
     ld = {
         "@context": "https://schema.org",
         "@type": "WebApplication",
@@ -133,6 +135,7 @@ def head(title, description, url, ld_name, ld_description):
 
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/styles.css">
+<script src="/assets/js/toolbar.js" defer></script>
 {theme}
 
 <script type="application/ld+json">
@@ -155,20 +158,37 @@ def head(title, description, url, ld_name, ld_description):
     </div>
   </div>
 </header>
+
+<!-- nav:start -->
+{nav}
+<!-- nav:end -->
+
 """.format(title=esc(title), description=esc(description), url=url, site=SITE,
            theme=THEME_BOOTSTRAP, ads=ADSENSE,
+           nav=sync_nav.render_nav(sync_nav.canon(nav_url)),
            ld=json.dumps(ld, indent=2, ensure_ascii=False))
 
 
-def tabbar(active):
-    items = [("/text-to-ascii", "Text to ASCII", "text"),
-             ("/image-to-ascii", "Image to ASCII", "image"),
-             ("/fonts/", "Font gallery", "fonts")]
-    out = ['  <nav class="tabbar" aria-label="ASCII tools">']
-    for href, label, key in items:
-        cur = ' aria-current="page"' if key == active else ""
-        out.append('    <a href="%s" class="tab-btn"%s>%s</a>' % (href, cur, label))
-    out.append("  </nav>")
+def font_switch(entry, siblings):
+    """The tier-2 sibling cluster, directly under the h1 of a font page.
+
+    Portfolio spec #13: a font page is the same renderer with the font fixed,
+    so its siblings are not peers of the three tools and do not belong in the
+    rail. They belong next to the control they change, as real links, above the
+    fold — this used to be a link list at the very bottom of the page, which is
+    not where a visitor decides the font is wrong for them.
+    """
+    out = ['  <nav class="font-switch" aria-labelledby="font-switch-label">',
+           '    <span class="font-switch-label" id="font-switch-label">%s fonts</span>'
+           % esc(entry["category"]),
+           '    <ul>']
+    for s in [entry] + list(siblings):
+        current = ' aria-current="page"' if s["slug"] == entry["slug"] else ""
+        out.append('      <li><a class="chip" href="/fonts/%s/"%s>%s</a></li>'
+                   % (s["slug"], current, esc(s["name"])))
+    out.append('      <li><a class="chip chip-all" href="/fonts/">All %d fonts →</a></li>'
+               % len(NAV.FONT_SLUGS))
+    out += ['    </ul>', '  </nav>']
     return "\n".join(out)
 
 
@@ -221,13 +241,12 @@ def font_page(font, entry, siblings):
 
     body = []
     body.append('<main id="main">')
-    body.append(tabbar("fonts"))
-    body.append('''
-  <div class="hero">
+    body.append('''  <div class="hero">
     <h1>%s ASCII Art Generator</h1>
     <p>Turn any text into ASCII art with the <strong>%s</strong> FIGlet font — free, instant, and processed entirely in your browser.</p>
-  </div>
-''' % (esc(name), esc(name)))
+  </div>''' % (esc(name), esc(name)))
+    body.append(font_switch(entry, siblings))
+    body.append('')
 
     body.append('  <div class="panel">')
     body.append('    <h2>%s preview</h2>' % esc(name))
@@ -273,17 +292,10 @@ def font_page(font, entry, siblings):
          else "It has no separate lowercase glyphs — lowercase input renders using the uppercase shapes.")))
     body.append('  </section>')
 
-    body.append('  <section class="container-narrow related-fonts" style="padding-left:0;padding-right:0;">')
-    body.append('    <h2>More %s fonts</h2>' % esc(category.lower()))
-    body.append('    <ul class="font-links">')
-    for s in siblings:
-        body.append('      <li><a href="/fonts/%s/">%s</a></li>' % (s["slug"], esc(s["name"])))
-    body.append('      <li><a href="/fonts/">All 59 fonts</a></li>')
-    body.append('    </ul>')
-    body.append('  </section>')
     body.append('</main>')
 
-    return (head(title, description, url, "%s ASCII Art Generator" % name,
+    return (head(title, description, url, "/fonts/%s/" % slug,
+                 "%s ASCII Art Generator" % name,
                  "Free browser-based ASCII art generator using the %s FIGlet font." % name)
             + "\n".join(body) + FOOT)
 
@@ -304,7 +316,6 @@ def index_page(entries, fonts):
 
     body = []
     body.append('<main id="main">')
-    body.append(tabbar("fonts"))
     body.append('''
   <div class="hero">
     <h1>ASCII Art Font Gallery</h1>
@@ -334,7 +345,8 @@ def index_page(entries, fonts):
   </section>''')
     body.append('</main>')
 
-    return (head(title, description, url, "ASCII Art Font Gallery",
+    return (head(title, description, url, "/fonts/",
+                 "ASCII Art Font Gallery",
                  "Browse all 59 FIGlet fonts available on generateascii.com, each with a live preview.")
             + "\n".join(body) + FOOT)
 
@@ -379,6 +391,11 @@ def main():
     args = ap.parse_args()
 
     entries = load_catalogue()
+    # The sheet's hub label is a literal count and the rail's aria-current
+    # depends on the tier-2 list, both read from the same manifest by
+    # tools/nav_data.py. If the two readings ever disagree the chrome is lying.
+    if [e["slug"] for e in entries] != NAV.FONT_SLUGS:
+        raise SystemExit("tools/nav_data.py and the catalogue disagree on the font list")
     slugs = [e["slug"] for e in entries]
     if len(set(slugs)) != len(slugs):
         dupes = sorted({s for s in slugs if slugs.count(s) > 1})

@@ -8,6 +8,7 @@
 <link rel="canonical" href="https://generateascii.com/articles/history-of-ascii-art.html">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/styles.css">
+<script src="/assets/js/toolbar.js" defer></script>
 <style>
 .article pre {
   background: var(--bg-inset);
@@ -25,6 +26,7 @@
 <script>try{var t=localStorage.getItem("ga-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="header-inner">
     <a class="brand" href="/" aria-label="generateascii.com home">
@@ -33,7 +35,32 @@
     </a>
   </div>
 </header>
-<main class="container-narrow article">
+
+<!-- nav:start -->
+<nav class="toolbar" aria-label="Tools">
+  <details class="tb-menu">
+    <summary class="tb-trigger" aria-label="All 3 tools">
+      <span class="tb-glyph" aria-hidden="true">&#9636;</span>
+      <span class="tb-label">All 3<span class="tb-label-long"> tools</span></span>
+    </summary>
+    <div class="tb-sheet is-flat">
+      <ul>
+        <li><a href="/text-to-ascii">Text to ASCII</a></li>
+        <li><a href="/image-to-ascii">Image to ASCII</a></li>
+        <li><a href="/fonts/">Font Gallery</a></li>
+      </ul>
+      <p class="tb-hub"><a href="/fonts/">All 59 fonts →</a></p>
+    </div>
+  </details>
+  <div class="tb-scrim"></div>
+  <ul class="tb-rail">
+    <li><a href="/text-to-ascii">Text</a></li>
+    <li><a href="/image-to-ascii">Image</a></li>
+    <li><a href="/fonts/">Fonts</a></li>
+  </ul>
+</nav>
+<!-- nav:end -->
+<main id="main" class="container-narrow article">
   <h1>The History of ASCII Art: From Typewriters to FIGlet</h1>
   <p>ASCII art — pictures drawn with nothing but the letters, digits, and punctuation on a keyboard — feels like a product of the early internet. In truth, people were making pictures out of type decades before computers existed, and the tradition has survived every technology shift since. This is a short tour of where it came from and how the pieces you can still make with our <a href="/">free ASCII art generator</a> fit into that lineage.</p>
 
