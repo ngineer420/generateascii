@@ -1,9 +1,9 @@
-# generateascii.com
+# inascii.com
 
 Free, ad-supported ASCII art generator. Two tools, zero backend: **Text → ASCII**
 (FIGlet banners, 59 curated fonts) and **Image → ASCII** (canvas luminance mapping).
 Everything runs client-side — no build step, no uploads, no server. Static files on
-GitHub Pages at generateascii.com.
+GitHub Pages at inascii.com.
 
 ## Architecture
 
@@ -178,7 +178,7 @@ persisted the same way.
 
 ## Deploy / infra
 
-- GitHub Pages, custom domain via `CNAME` (generateascii.com). Apex `A` records point at
+- GitHub Pages, custom domain via `CNAME` (inascii.com). Apex `A` records point at
   GitHub Pages IPs; DNS is on Cloudflare.
 - `.nojekyll` skips Jekyll processing.
 - Keep `sitemap.xml` and `robots.txt` current when adding pages/articles.

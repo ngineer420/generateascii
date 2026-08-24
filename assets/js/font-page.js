@@ -1,4 +1,4 @@
-/* generateascii.com — per-font landing pages (/fonts/<slug>/).
+/* inascii.com — per-font landing pages (/fonts/<slug>/).
    These pages ship their sample art as real text baked in by
    tools/build_font_pages.py, so they read fine with JavaScript off. This file
    only adds the live bits on top: theme toggle, footer year, re-rendering the

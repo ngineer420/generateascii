@@ -1,4 +1,4 @@
-# generateascii.com
+# inascii.com
 
 A free, ad-supported ASCII art generator:
 
@@ -36,7 +36,7 @@ assets/js/font-page.js Live preview + copy on the per-font landing pages
 assets/js/figlet.min.js       Vendored figlet.js browser build
 assets/js/fonts-manifest.js   Curated font catalogue
 assets/fonts/*.flf      Vendored FIGlet font files (from the figlet npm package)
-CNAME                   GitHub Pages custom domain (generateascii.com)
+CNAME                   GitHub Pages custom domain (inascii.com)
 ```
 
 ## Regenerating the font pages
@@ -63,18 +63,18 @@ python3 -m http.server 8000        # then open /tools/check_figfont.html
 
 ## Enabling ads (Google AdSense)
 
-1. Deploy the site and get it live at generateascii.com.
+1. Deploy the site and get it live at inascii.com.
 2. Apply at https://adsense.google.com with the live URL. Approval requires a working privacy policy (already included) and some real content/traffic — it isn't instant.
 3. Once approved, uncomment the AdSense `<script>` tag in `index.html`'s `<head>` and replace `ca-pub-XXXXXXXXXXXXXXXX` with your publisher ID. Auto ads then places ad units automatically — no manual placement needed.
 
-## Custom domain (generateascii.com)
+## Custom domain (inascii.com)
 
-The `CNAME` file tells GitHub Pages to serve this repo at `generateascii.com`. You still need to point DNS at GitHub Pages yourself:
+The `CNAME` file tells GitHub Pages to serve this repo at `inascii.com`. You still need to point DNS at GitHub Pages yourself:
 
-- Apex domain (`generateascii.com`): four `A` records to `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`.
+- Apex domain (`inascii.com`): four `A` records to `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`.
 - `www` subdomain (optional): `CNAME` record to `<username>.github.io`.
 
-Then enable Pages in the repo's Settings → Pages, and enter `generateascii.com` as the custom domain (GitHub will offer to enforce HTTPS once DNS propagates).
+Then enable Pages in the repo's Settings → Pages, and enter `inascii.com` as the custom domain (GitHub will offer to enforce HTTPS once DNS propagates).
 
 ## Fonts license
 

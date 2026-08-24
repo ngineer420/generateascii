@@ -1,9 +1,9 @@
 ---
 name: verify
-description: Build/launch/drive recipe to verify generateascii.com changes in a real browser.
+description: Build/launch/drive recipe to verify inascii.com changes in a real browser.
 ---
 
-# Verifying generateascii.com
+# Verifying inascii.com
 
 Static site — no build step. Serve the repo root and drive it headless.
 

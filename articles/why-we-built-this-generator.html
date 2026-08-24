@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Why We Built This ASCII Generator — and How to Get the Best Results — generateascii.com</title>
-<meta name="description" content="The design decisions behind generateascii.com — fully client-side, 59 FIGlet fonts, live preview — plus concrete tips for better text banners and image conversions.">
-<link rel="canonical" href="https://generateascii.com/articles/why-we-built-this-generator.html">
+<title>Why We Built This ASCII Generator — and How to Get the Best Results — inascii.com</title>
+<meta name="description" content="The design decisions behind inascii.com — fully client-side, 59 FIGlet fonts, live preview — plus concrete tips for better text banners and image conversions.">
+<link rel="canonical" href="https://inascii.com/articles/why-we-built-this-generator.html">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/styles.css">
 <script src="/assets/js/toolbar.js" defer></script>
@@ -29,8 +29,8 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="/" aria-label="generateascii.com home">
-      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+    <a class="brand" href="/" aria-label="inascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>in<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
       <span class="brand-tag">text &amp; image → ASCII art</span>
     </a>
   </div>
@@ -62,7 +62,7 @@
 <!-- nav:end -->
 <main id="main" class="container-narrow article">
   <h1>Why We Built This Generator — and How to Get the Best Results From It</h1>
-  <p>There are plenty of ASCII art generators on the internet. Most of them work. So why build another one? Because "works" and "pleasant to use" are different bars, and because several design decisions that seemed obvious to us turned out to be surprisingly rare. This article explains the choices behind <a href="/">generateascii.com</a>, and then gets practical: concrete tips for getting genuinely good output from both the text and image tools.</p>
+  <p>There are plenty of ASCII art generators on the internet. Most of them work. So why build another one? Because "works" and "pleasant to use" are different bars, and because several design decisions that seemed obvious to us turned out to be surprisingly rare. This article explains the choices behind <a href="/">inascii.com</a>, and then gets practical: concrete tips for getting genuinely good output from both the text and image tools.</p>
 
   <h2>Decision one: everything runs in your browser</h2>
   <p>The biggest choice was architectural. Many converters upload your input to a server, process it there, and send the result back. For ASCII generation that is unnecessary on every axis: rendering a FIGlet banner is lightweight string manipulation, and converting an image is one pass over a downscaled pixel grid. Your laptop — or your phone — does both faster than a network round-trip could even begin.</p>
@@ -119,7 +119,7 @@
 </main>
 <footer class="site-footer">
   <div class="footer-inner">
-    <div>© <span id="year"></span> generateascii.com</div>
+    <div>© <span id="year"></span> inascii.com</div>
     <div class="footer-links">
       <a href="/">Home</a>
       <a href="/privacy.html">Privacy</a>

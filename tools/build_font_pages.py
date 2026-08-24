@@ -42,7 +42,7 @@ from figfont import FigFont  # noqa: E402
 import nav_data as NAV  # noqa: E402
 import sync_nav  # noqa: E402  — the toolbar renderer, shared with the hand-written pages
 
-SITE = "https://generateascii.com"
+SITE = "https://inascii.com"
 FONT_DIR = os.path.join(ROOT, "assets", "fonts")
 OUT_DIR = os.path.join(ROOT, "fonts")
 
@@ -149,8 +149,8 @@ def head(title, description, url, nav_url, ld_name, ld_description):
 
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="/" aria-label="generateascii.com home">
-      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+    <a class="brand" href="/" aria-label="inascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>in<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
       <span class="brand-tag">text &amp; image → ASCII art</span>
     </a>
     <div class="header-actions">
@@ -195,7 +195,7 @@ def font_switch(entry, siblings):
 FOOT = """
 <footer class="site-footer">
   <div class="footer-inner">
-    <div>© <span id="year"></span> generateascii.com</div>
+    <div>© <span id="year"></span> inascii.com</div>
     <div class="footer-links">
       <a href="/">Home</a>
       <a href="/fonts/">Font gallery</a>
@@ -303,7 +303,7 @@ def font_page(font, entry, siblings):
 def index_page(entries, fonts):
     url = SITE + "/fonts/"
     title = "All 59 ASCII Art Fonts — FIGlet Font Gallery"
-    description = ("Browse all 59 FIGlet fonts available on generateascii.com, grouped by style, "
+    description = ("Browse all 59 FIGlet fonts available on inascii.com, grouped by style, "
                    "each with a live preview and its own generator page. Free and instant.")
 
     by_category = {}
@@ -319,7 +319,7 @@ def index_page(entries, fonts):
     body.append('''
   <div class="hero">
     <h1>ASCII Art Font Gallery</h1>
-    <p>All %d FIGlet fonts on generateascii.com, grouped by style. Every font has its own page with a live preview.</p>
+    <p>All %d FIGlet fonts on inascii.com, grouped by style. Every font has its own page with a live preview.</p>
   </div>
 ''' % len(entries))
 
@@ -347,7 +347,7 @@ def index_page(entries, fonts):
 
     return (head(title, description, url, "/fonts/",
                  "ASCII Art Font Gallery",
-                 "Browse all 59 FIGlet fonts available on generateascii.com, each with a live preview.")
+                 "Browse all 59 FIGlet fonts available on inascii.com, each with a live preview.")
             + "\n".join(body) + FOOT)
 
 

@@ -1,4 +1,4 @@
-/* Curated FIGlet font catalogue for generateascii.com.
+/* Curated FIGlet font catalogue for inascii.com.
    `file` matches assets/fonts/<file>.flf exactly (case + spaces). */
 const FONT_CATALOGUE = [
   { file: "Standard",       category: "Classic" },
