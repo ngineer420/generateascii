@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How Text-to-ASCII Generators Work: FIGlet Fonts, Grids, and Smushing — generateascii.com</title>
+<title>How Text-to-ASCII Generators Work: FIGlet Fonts, Grids, and Smushing — inascii.com</title>
 <meta name="description" content="A plain-English explanation of how ASCII banner generators turn text into big letter art: the FIGlet font format, character grids, smushing rules, and why monospace matters.">
-<link rel="canonical" href="https://generateascii.com/articles/how-text-to-ascii-generators-work.html">
+<link rel="canonical" href="https://inascii.com/articles/how-text-to-ascii-generators-work.html">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/styles.css">
 <script src="/assets/js/toolbar.js" defer></script>
@@ -29,8 +29,8 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="/" aria-label="generateascii.com home">
-      <span class="brand-mark"><span class="bracket">[</span>generate<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+    <a class="brand" href="/" aria-label="inascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>in<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
       <span class="brand-tag">text &amp; image → ASCII art</span>
     </a>
   </div>
@@ -99,7 +99,7 @@
   <p>A bright cell becomes a space or a period; a dark cell becomes a <code>%</code> or <code>@</code>. One correction matters more than any other: character cells are taller than they are wide (roughly 2:1 in most monospace fonts), so the converter samples fewer rows than a square grid would need. Skip that adjustment and every image comes out stretched vertically. Add optional brightness, contrast, and gamma adjustments before the ramp lookup, and per-cell color sampling if you want colored output, and you have essentially the entire algorithm our image converter runs on a canvas element in your browser.</p>
 
   <h2>Why this all runs client-side just fine</h2>
-  <p>Neither algorithm needs a server. Rendering a FIGlet banner is string concatenation over a few kilobytes of font data; converting an image is a single pass over a downscaled pixel buffer. A phone from a decade ago can do both between keystrokes. That is why <a href="/">generateascii.com</a> does everything locally: the font files and figlet.js port load with the page, your text and images never leave the browser, and the preview updates live as you type. The 1991 design turned out to be perfectly shaped for the 2020s web.</p>
+  <p>Neither algorithm needs a server. Rendering a FIGlet banner is string concatenation over a few kilobytes of font data; converting an image is a single pass over a downscaled pixel buffer. A phone from a decade ago can do both between keystrokes. That is why <a href="/">inascii.com</a> does everything locally: the font files and figlet.js port load with the page, your text and images never leave the browser, and the preview updates live as you type. The 1991 design turned out to be perfectly shaped for the 2020s web.</p>
   <p>If you want to see the layout modes in action, open the generator, type a word with adjacent round letters ("moon" works well), and switch between Full width, Default, and Fitted — you can watch the kerning and smushing rules pull the letters together.</p>
 
   <div class="more-reading">
@@ -114,7 +114,7 @@
 </main>
 <footer class="site-footer">
   <div class="footer-inner">
-    <div>© <span id="year"></span> generateascii.com</div>
+    <div>© <span id="year"></span> inascii.com</div>
     <div class="footer-links">
       <a href="/">Home</a>
       <a href="/privacy.html">Privacy</a>

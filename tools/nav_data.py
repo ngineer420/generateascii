@@ -1,4 +1,4 @@
-"""generateascii.com navigation data — the single source of truth for the toolbar.
+"""inascii.com navigation data — the single source of truth for the toolbar.
 
 This is the ONLY file that differs between sites. `sync_nav.py` is generic and
 copies verbatim. Nothing here is computed at runtime by the browser: sync_nav
