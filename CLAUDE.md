@@ -17,7 +17,8 @@ GitHub Pages at inascii.com.
   page.
 - `fonts/` — **generated, do not hand-edit.** One landing page per FIGlet font
   (`fonts/<slug>/index.html` plus a byte-identical flat `fonts/<slug>.html`), and
-  an index at `fonts/index.html` / `fonts.html`. Everything under `fonts/`, plus
+  an index at `fonts/index.html`. The index has no flat alias at the repo root:
+  it lives at `/fonts/` only. Everything under `fonts/`, plus
   `sitemap.xml`, is written by `tools/build_font_pages.py` — change the template
   in that script and re-run it, never edit the output.
 - `tools/` — the page generator and its FIGlet engine (Python 3, stdlib only, not
@@ -67,7 +68,12 @@ comparisons, and the expected result is zero mismatches.
 
 `/fonts/<slug>/` links into the main tool as `/text-to-ascii?font=<Font Name>`;
 `app.js` reads that parameter, validates it against `FONT_CATALOGUE`, and applies
-it after the sessionStorage restore so an explicit link always wins.
+it after the sessionStorage restore so an explicit link always wins. The tool also
+reads `?text=` (capped at 200 characters) and rewrites both parameters with
+`history.replaceState` as you type, so the address bar is always a share link.
+The "Copy link" button copies that URL, or opens the native share sheet with the
+art as text on a touch device. Each `/fonts/<slug>/` page reads `?text=` too and
+renders its sample with it.
 
 ## Navigation — one toolbar, one data file
 

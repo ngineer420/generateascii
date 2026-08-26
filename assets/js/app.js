@@ -211,6 +211,7 @@
     let colorMode = "solid"; // "solid" | "rainbow"
     let bgMode = "dark"; // "dark" | "light" | "transparent"
     let selectedFont = DEFAULT_FONT;
+    const TEXT_MAX = 200; // the maxlength on #text-input, and the ?text= cap
 
     function persistTextState() {
       saveSession("text", {
@@ -247,26 +248,62 @@
       }
     })();
 
-    // ?font=Doom deep link, used by the per-font landing pages under /fonts/.
-    // Applied after the session restore so an explicit link always wins, and
-    // validated against the catalogue so a junk value cannot 404 a font fetch.
-    (function applyFontParam() {
-      let requested;
+    // ?font=Doom&text=hello deep link: the per-font landing pages send ?font=,
+    // and "Copy link" sends both. Applied after the session restore so an
+    // explicit link always wins. The font is validated against the catalogue
+    // so a junk value cannot 404 a font fetch. The text takes the same
+    // 200-character cap as the input.
+    (function applyUrlParams() {
+      let params;
       try {
-        requested = new URLSearchParams(location.search).get("font");
+        params = new URLSearchParams(location.search);
       } catch (e) {
         return;
       }
-      if (!requested) return;
-      const match = FONT_CATALOGUE.find(
-        (f) => f.file.toLowerCase() === requested.toLowerCase()
-      );
-      if (match) selectedFont = match.file;
+      const requested = params.get("font");
+      if (requested) {
+        const match = FONT_CATALOGUE.find(
+          (f) => f.file.toLowerCase() === requested.toLowerCase()
+        );
+        if (match) selectedFont = match.file;
+      }
+      const text = params.get("text");
+      if (text) textInput.value = text.slice(0, TEXT_MAX);
     })();
 
     function currentText() {
-      return (textInput.value || "").slice(0, 200);
+      return (textInput.value || "").slice(0, TEXT_MAX);
     }
+
+    /* ---- share link ----
+       The URL is the setup: ?font= and ?text=. It is rewritten with
+       replaceState as you type, so the address bar is always a link that
+       reproduces the banner. Only the tool's own path is rewritten. "/" mounts
+       both panels and is not a tool URL, so it keeps a clean address. */
+
+    const TEXT_TOOL_PATH = "/text-to-ascii";
+
+    function shareUrl() {
+      const params = new URLSearchParams();
+      const text = currentText();
+      if (text || selectedFont !== DEFAULT_FONT) params.set("font", selectedFont);
+      if (text) params.set("text", text);
+      const query = params.toString();
+      return location.origin + TEXT_TOOL_PATH + (query ? "?" + query : "");
+    }
+
+    function syncUrl() {
+      const here = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/\/+$/, "");
+      if (here !== TEXT_TOOL_PATH) return;
+      const target = shareUrl();
+      if (target === location.origin + location.pathname + location.search) return;
+      // Safari caps replaceState at 100 calls per 30 s and throws past it.
+      try {
+        history.replaceState(history.state, "", target);
+      } catch (e) {}
+    }
+    // Debounced: one URL write per pause in typing, not one per keystroke.
+    const debouncedSyncUrl = debounce(syncUrl, 200);
 
     function applyColorStyle() {
       output.style.color = "";
@@ -479,6 +516,7 @@
       debouncedGallery();
       updateEditHint();
       persistTextState();
+      debouncedSyncUrl();
     });
     layoutSelect.addEventListener("change", () => {
       updateMainPreview();
@@ -671,6 +709,7 @@
           updateMainPreview();
           highlightGallerySelection();
           persistTextState();
+          syncUrl();
           // Picking a font in fullscreen means "that one" — drop back to the
           // sidebar and bring the chosen font into view there.
           if (fontListPanel.classList.contains("is-fullscreen")) {
@@ -690,7 +729,26 @@
     /* ---- export ---- */
 
     document.getElementById("text-copy").addEventListener("click", () => {
+      copyFlash.textContent = "Copied!";
       copyText(output.textContent, copyFlash);
+    });
+
+    document.getElementById("text-copy-link").addEventListener("click", async () => {
+      const url = shareUrl();
+      const art = output.classList.contains("is-placeholder") ? "" : output.textContent;
+      // A touch device with the Web Share API gets the native share sheet,
+      // with the art itself as the shared text. Everywhere else the link goes
+      // to the clipboard.
+      if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+        try {
+          await navigator.share({ title: "ASCII art from inascii.com", text: art, url });
+          return;
+        } catch (e) {
+          if (e && e.name === "AbortError") return; // the user closed the sheet
+        }
+      }
+      copyFlash.textContent = "Link copied!";
+      copyText(url, copyFlash);
     });
 
     document.getElementById("text-download-txt").addEventListener("click", () => {
@@ -766,6 +824,7 @@
     /* ---- init ---- */
     renderGallery();
     updateMainPreview();
+    syncUrl(); // a restored session or a deep link shows as a share link at once
     requestAnimationFrame(scrollGalleryToSelection);
   })();
 

@@ -79,6 +79,15 @@
     pending = setTimeout(render, 60);
   });
 
+  // ?text= from a share link: the sample renders with that text as soon as
+  // the font loads. The input's own maxlength is the cap.
+  var shared = null;
+  try { shared = new URLSearchParams(location.search).get("text"); } catch (e) {}
+  if (shared) {
+    input.value = shared.slice(0, input.maxLength > 0 ? input.maxLength : 40);
+    render();
+  }
+
   if (copyBtn) {
     copyBtn.addEventListener("click", function () {
       var text = hero.textContent;
