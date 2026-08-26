@@ -11,7 +11,7 @@ those files.
 
 What it writes, all under the repo root:
 
-    fonts/index.html + fonts.html                 the index of all 59
+    fonts/index.html                              the index of all 59
     fonts/<slug>/index.html + fonts/<slug>.html   one per font
     sitemap.xml                                   rebuilt to match what is on disk
 
@@ -419,7 +419,6 @@ def main():
 
     idx = index_page(entries, fonts)
     write(os.path.join(OUT_DIR, "index.html"), idx, args.check, stale)
-    write(os.path.join(ROOT, "fonts.html"), idx, args.check, stale)
     write(os.path.join(ROOT, "sitemap.xml"), sitemap(entries), args.check, stale)
 
     if args.check:
