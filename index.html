@@ -255,6 +255,16 @@
             <span class="anim-count" id="img-anim-count">frame 1 / 1</span>
             <button type="button" id="img-download-anim" class="icon-btn" title="Standalone HTML page that plays the ASCII animation">Animated .html</button>
           </div>
+          <div class="share-bar" id="img-share" hidden>
+            <button type="button" id="img-share-create" class="icon-btn">Create share link</button>
+            <span class="share-note">The link is public. Anyone who has it can see this art.</span>
+          </div>
+          <div class="share-result" id="img-share-result" hidden>
+            <label class="visually-hidden" for="img-share-url">Share link</label>
+            <input type="text" id="img-share-url" readonly>
+            <button type="button" id="img-share-copy" class="icon-btn">Copy link</button>
+          </div>
+          <p class="share-status" id="img-share-status" role="status" aria-live="polite"></p>
           <span class="copy-flash" id="img-copy-flash">Copied!</span>
         </div>
 
@@ -278,6 +288,14 @@
               <label for="img-invert" style="margin:0;">Invert</label>
             </div>
           </div>
+        </div>
+
+        <div class="panel" id="img-shares" hidden>
+          <h2>Your share links</h2>
+          <p class="share-list-note">Links made in this browser. Delete one and it stops working for everyone.</p>
+          <ul class="share-list" id="img-shares-list"></ul>
+          <p class="share-status" id="img-shares-status" role="status" aria-live="polite"></p>
+          <button type="button" id="img-shares-older" class="icon-btn" hidden>Show older</button>
         </div>
       </div>
     </div>
@@ -316,5 +334,6 @@
 <script src="/assets/js/figlet.min.js"></script>
 <script src="/assets/js/fonts-manifest.js"></script>
 <script src="/assets/js/app.js"></script>
+<script type="module" src="/assets/js/share.js"></script>
 </body>
 </html>
