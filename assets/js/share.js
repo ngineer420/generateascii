@@ -11,7 +11,7 @@
                          loads with the page only where a create happened before, so a first
                          visit mints nothing and reads nothing. */
 
-import { client, shareUrl, ART_MAX, DOC_BYTES_MAX } from "./sch3ma.js";
+import { client, configured, shareUrl, ART_MAX, DOC_BYTES_MAX } from "./sch3ma.js";
 
 const SHARED_KEY = "ga-shared"; // "1" once this browser created a link
 const PAGE = 10;
@@ -81,8 +81,15 @@ function button(label) {
 async function boot() {
   const bar = $("img-share");
   if (!bar) return;
-  const db = await client();
-  if (!db) return;
+  if (!configured) return;
+
+  // The SDK loads on first use: a press of Create or Delete, or the list of a browser that shared
+  // before. A visitor who never shares never contacts sch3ma.
+  async function sdk() {
+    const db = await client();
+    if (!db) throw new Error("sch3ma is not reachable");
+    return db;
+  }
 
   const createBtn = $("img-share-create");
   const result = $("img-share-result");
@@ -146,7 +153,7 @@ async function boot() {
       del.disabled = true;
       del.textContent = "Deleting…";
       try {
-        await db.delete("shares", row.id);
+        await (await sdk()).delete("shares", row.id);
         removeItem(row.id);
         listStatus.textContent = "Link deleted. It no longer works.";
       } catch (err) {
@@ -173,6 +180,7 @@ async function boot() {
   async function loadList(more) {
     older.disabled = true;
     try {
+      const db = await sdk();
       const session = await db.session();
       const page = await db.list("shares", {
         filter: { visitor: session.identity },
@@ -231,7 +239,7 @@ async function boot() {
     createBtn.textContent = "Saving…";
     status.textContent = "";
     try {
-      const row = await db.create("shares", body);
+      const row = await (await sdk()).create("shares", body);
       store.set(SHARED_KEY, "1");
       const url = shareUrl(row.id);
       resultId = row.id;

@@ -5,8 +5,8 @@
    share bar, the share list and the viewer then stay off, and nothing is requested. To turn
    sharing on, run tools/sch3ma_setup.mjs, then fill both values with the sed it prints. */
 
-const PROJECT = "prj_PENDING";
-const KEY = "pk_live_PENDING"; // publishable: it ships in the page by design
+const PROJECT = "prj_01M2C23KF5ADD91NF4WN6NWAJC";
+const KEY = "pk_live_01M2C24X9QBYTCN1WHNQ4KSPA9_Q0LuvV1w7AMDVhYxe62hCPz2rF9ACdIh"; // publishable: it ships in the page by design
 
 export const configured = !PROJECT.endsWith("_PENDING") && !KEY.endsWith("_PENDING");
 
