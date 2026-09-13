@@ -890,7 +890,6 @@
     let bgMode = "dark"; // "dark" | "light"
     let lastAsciiText = "";
     let lastGrid = null; // rendered cells of the current frame, for colour export
-    let lastColumns = 0; // width of lastAsciiText, for share links
     let lastImageDataUrl = null;
     let lastImageMeta = null;
 
@@ -901,6 +900,129 @@
     let frameIndex = 0;
     let playing = false;
     let playTimer = null;
+
+    /* ---- links that carry the art ----
+       Settings alone cannot rebuild image art, because the person who opens the link does not
+       have the image. So "Copy link" puts the art itself in the link: the characters, the
+       colour settings and, in full colour, one 12-bit colour per inked cell. The payload is
+       deflated and base64url-encoded after "#a=", and a browser never sends that part to a
+       server. These declarations sit above restoreImageState, which calls linkInHash(). */
+
+    const LINK_PATH = "/image-to-ascii";
+    const LINK_KEY = "#a=";
+    const LINK_MAX = 64000; // characters; a longer link breaks in too many apps
+    const LINK_MAX_ROWS = 1000;
+    const B64URL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const sharedNote = document.getElementById("img-shared-note");
+    let sharedArt = null; // { grid, columns, rows } from a link, drawn while no image is loaded
+
+    function linkInHash() {
+      return location.hash.startsWith(LINK_KEY);
+    }
+
+    function toBase64Url(bytes) {
+      let bin = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+
+    function fromBase64Url(text) {
+      const bin = atob(text.replace(/-/g, "+").replace(/_/g, "/"));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return bytes;
+    }
+
+    async function transform(bytes, stream) {
+      const res = new Response(new Blob([bytes]).stream().pipeThrough(stream));
+      return new Uint8Array(await res.arrayBuffer());
+    }
+
+    /** The link for the art on screen, or null where the browser has no CompressionStream. */
+    async function artLink() {
+      if (!lastGrid || !lastGrid.length || typeof CompressionStream === "undefined") return null;
+      const color = colorMode === "color";
+      let colors = "";
+      // One character a cell, the same UTF-16 unit buildFrame took from the ramp.
+      const lines = lastGrid.map((row) => {
+        let line = "";
+        for (const cell of row) {
+          line += cell.ch;
+          if (!color || cell.ch === " ") continue;
+          // 4 bits a channel. Two base64url characters hold the 12 bits.
+          const r = Math.round(cell.r / 17), g = Math.round(cell.g / 17), b = Math.round(cell.b / 17);
+          colors += B64URL[(r << 2) | (g >> 2)] + B64URL[((g & 3) << 4) | b];
+        }
+        return line;
+      });
+      const payload = { v: 1, c: lastGrid[0].length, t: lines.join("\n"), m: colorMode, b: bgMode };
+      if (color) payload.p = colors;
+      else payload.k = monoColorInput.value;
+      const packed = await transform(new TextEncoder().encode(JSON.stringify(payload)), new CompressionStream("deflate-raw"));
+      return location.origin + LINK_PATH + LINK_KEY + toBase64Url(packed);
+    }
+
+    /** Draw the art of a "#a=" link. A cut-off or edited link leaves the tool as it is. */
+    async function openLink() {
+      if (!linkInHash() || typeof DecompressionStream === "undefined") return;
+      let data = null;
+      try {
+        const bytes = await transform(fromBase64Url(location.hash.slice(LINK_KEY.length)), new DecompressionStream("deflate-raw"));
+        data = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (e) {
+        return;
+      }
+      if (!data || data.v !== 1 || typeof data.t !== "string") return;
+      const columns = Number(data.c);
+      const lines = data.t.split("\n");
+      if (!Number.isInteger(columns) || columns < 1 || columns > Number(widthSlider.max) || lines.length > LINK_MAX_ROWS) return;
+      if (currentDrawable()) return; // an image loaded while the link decoded
+
+      const mono = /^#[0-9a-f]{6}$/i.test(data.k || "") ? data.k : monoColorInput.value;
+      const ink = [1, 3, 5].map((i) => parseInt(mono.slice(i, i + 2), 16));
+      const colors = data.m === "color" && typeof data.p === "string" ? data.p : "";
+      let next = 0;
+      const grid = lines.map((line) => {
+        const row = [];
+        for (let x = 0; x < columns; x++) {
+          const ch = line[x] || " ";
+          const cell = { ch, r: ink[0], g: ink[1], b: ink[2] };
+          if (colors && ch !== " " && next + 1 < colors.length) {
+            const hi = B64URL.indexOf(colors[next++]);
+            const lo = B64URL.indexOf(colors[next++]);
+            if (hi >= 0 && lo >= 0) {
+              cell.r = (hi >> 2) * 17;
+              cell.g = (((hi & 3) << 2) | (lo >> 4)) * 17;
+              cell.b = (lo & 15) * 17;
+            }
+          }
+          row.push(cell);
+        }
+        return row;
+      });
+
+      colorMode = colors ? "color" : "mono";
+      colorOptBtns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === colorMode)));
+      monoColorField.style.display = colorMode === "mono" ? "" : "none";
+      monoColorInput.value = mono;
+      bgMode = data.b === "light" ? "light" : "dark";
+      bgOptBtns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bg === bgMode)));
+      sharedArt = { grid, columns, rows: grid.length };
+      lastGrid = grid;
+      lastAsciiText = data.t;
+      drawCanvas(grid, columns, grid.length);
+      if (sharedNote) sharedNote.hidden = false;
+    }
+
+    /** Forget shared art once the visitor brings an image of their own. */
+    function clearSharedArt() {
+      sharedArt = null;
+      if (sharedNote) sharedNote.hidden = true;
+      if (!linkInHash()) return;
+      try {
+        history.replaceState(history.state, "", location.pathname + location.search);
+      } catch (e) {}
+    }
 
     function currentRamp() {
       if (rampSelect.value === "custom") return customRampInput.value || RAMPS.standard;
@@ -985,6 +1107,7 @@
       if (item) handleFile(item.getAsFile());
     });
     sourceClear.addEventListener("click", () => {
+      clearSharedArt();
       sourceImage = null;
       releaseFrames();
       updateAnimBar();
@@ -995,7 +1118,6 @@
       emptyMsg.style.display = "";
       outputWrap.classList.add("is-empty");
       lastAsciiText = "";
-      announceArt();
       lastImageDataUrl = null;
       lastImageMeta = null;
       persistImageState();
@@ -1003,6 +1125,7 @@
 
     function handleFile(file) {
       if (!file.type.startsWith("image/")) return;
+      clearSharedArt();
       releaseFrames();
       updateAnimBar();
       const url = URL.createObjectURL(file);
@@ -1142,7 +1265,8 @@
         bgMode = saved.bgMode;
         bgOptBtns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bg === bgMode)));
       }
-      if (saved.imageDataUrl) {
+      // A link wins over the image this tab restored: the link is what the visitor opened.
+      if (saved.imageDataUrl && !linkInHash()) {
         lastImageDataUrl = saved.imageDataUrl;
         lastImageMeta = saved.imageMeta || null;
         const img = new Image();
@@ -1278,13 +1402,15 @@
 
     function computeAndRender() {
       const drawable = currentDrawable();
-      if (!drawable) return;
+      if (!drawable) {
+        // Shared art has no source image, so only the colour and background controls redraw it.
+        if (sharedArt) drawCanvas(sharedArt.grid, sharedArt.columns, sharedArt.rows);
+        return;
+      }
       const built = buildFrame(drawable);
       lastGrid = built.grid;
       lastAsciiText = built.text;
-      lastColumns = built.columns;
       drawCanvas(built.grid, built.columns, built.rows);
-      announceArt();
     }
 
     function drawCanvas(grid, columns, rows) {
@@ -1514,23 +1640,42 @@
       });
     }
 
-    /* ---- share links ----
-       assets/js/share.js is a module and cannot reach this closure, so the art travels by window
-       event: once per render, and again when share.js asks. It asks once when it boots, because
-       a restored session can render before the module has loaded. */
-
-    function announceArt() {
-      window.dispatchEvent(new CustomEvent("ga:image-art", {
-        detail: { text: lastAsciiText, columns: lastAsciiText ? lastColumns : 0 },
-      }));
-    }
-    window.addEventListener("ga:image-art-request", announceArt);
-
     /* ---- export ---- */
 
     document.getElementById("img-copy").addEventListener("click", () => {
       if (lastAsciiText) copyText(lastAsciiText, copyFlash);
     });
+    const copyLinkBtn = document.getElementById("img-copy-link");
+    if (copyLinkBtn) {
+      copyLinkBtn.addEventListener("click", async () => {
+        if (!lastGrid) return;
+        const say = (text) => {
+          copyFlash.textContent = text;
+          flash(copyFlash);
+          setTimeout(() => { copyFlash.textContent = "Copied!"; }, 1200);
+        };
+        let url = null;
+        try {
+          url = await artLink();
+        } catch (e) {
+          url = null;
+        }
+        if (!url) return say("This browser cannot make a link");
+        if (url.length > LINK_MAX) return say("Too big for a link. Lower the width.");
+        // A touch device with the Web Share API gets the native share sheet, as on the text tool.
+        if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+          try {
+            await navigator.share({ title: "ASCII art from inascii.com", url });
+            return;
+          } catch (e) {
+            if (e && e.name === "AbortError") return; // the visitor closed the sheet
+          }
+        }
+        copyFlash.textContent = "Link copied!";
+        await copyText(url, copyFlash);
+        setTimeout(() => { copyFlash.textContent = "Copied!"; }, 1200);
+      });
+    }
     const copyAnsiBtn = document.getElementById("img-copy-ansi");
     if (copyAnsiBtn) {
       copyAnsiBtn.addEventListener("click", () => {
@@ -1597,5 +1742,17 @@
         download("ascii-animation.html", new Blob([doc], { type: "text/html" }));
       });
     }
+
+    // A "#a=" link opens its art, and the same tab can take a new link.
+    openLink();
+    window.addEventListener("hashchange", () => {
+      if (!linkInHash()) return;
+      stopPlayback();
+      releaseFrames();
+      updateAnimBar();
+      sourceImage = null;
+      sourceThumb.classList.remove("show");
+      openLink();
+    });
   })();
 })();
