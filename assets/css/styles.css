@@ -805,6 +805,8 @@ body.gallery-fullscreen { overflow: hidden; }
   border: 1px solid var(--border-soft);
   border-radius: 8px;
 }
+/* display: flex beats the UA rule for [hidden], so a still image showed the bar. */
+.anim-bar[hidden] { display: none; }
 .anim-bar input[type="range"] { flex: 1 1 120px; min-width: 0; }
 .anim-count {
   font-size: 12px;
