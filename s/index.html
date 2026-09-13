@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shared ASCII art — inascii.com</title>
+<meta name="description" content="ASCII art that someone made on inascii.com and shared with a link.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://inascii.com/s/">
+<meta name="theme-color" content="#0b0d0f">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Shared ASCII art">
+<meta property="og:description" content="ASCII art made on inascii.com.">
+<meta property="og:image" content="https://inascii.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Shared ASCII art">
+<meta name="twitter:description" content="ASCII art made on inascii.com.">
+<meta name="twitter:image" content="https://inascii.com/assets/og-image.png">
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/styles.css">
+<script src="/assets/js/toolbar.js" defer></script>
+<script>try{var t=localStorage.getItem("ga-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="inascii.com home">
+      <span class="brand-mark"><span class="bracket">[</span>in<span class="bracket">/</span>ascii<span class="bracket">]</span></span>
+      <span class="brand-tag">text &amp; image → ASCII art</span>
+    </a>
+    <div class="header-actions">
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark/light theme" title="Toggle theme">◐</button>
+    </div>
+  </div>
+</header>
+
+<!-- nav:start -->
+<nav class="toolbar" aria-label="Tools">
+  <details class="tb-menu">
+    <summary class="tb-trigger" aria-label="All 3 tools">
+      <span class="tb-glyph" aria-hidden="true">&#9636;</span>
+      <span class="tb-label">All 3<span class="tb-label-long"> tools</span></span>
+    </summary>
+    <div class="tb-sheet is-flat">
+      <ul>
+        <li><a href="/text-to-ascii">Text to ASCII</a></li>
+        <li><a href="/image-to-ascii">Image to ASCII</a></li>
+        <li><a href="/fonts/">Font Gallery</a></li>
+      </ul>
+      <p class="tb-hub"><a href="/fonts/">All 59 fonts →</a></p>
+    </div>
+  </details>
+  <div class="tb-scrim"></div>
+  <ul class="tb-rail">
+    <li><a href="/text-to-ascii">Text</a></li>
+    <li><a href="/image-to-ascii">Image</a></li>
+    <li><a href="/fonts/">Fonts</a></li>
+  </ul>
+</nav>
+<!-- nav:end -->
+
+<main id="main">
+  <div class="hero">
+    <h1>Shared ASCII art</h1>
+    <p>Someone made this ASCII art on inascii.com and shared a link to it.</p>
+  </div>
+
+  <div class="panel share-panel">
+    <p class="share-state" id="share-state" role="status" hidden></p>
+    <noscript><p class="share-state">Turn on JavaScript to see the shared art.</p></noscript>
+    <div id="share-result" hidden>
+      <div class="output-toolbar">
+        <h2 style="margin:0;" id="share-meta">Art</h2>
+        <div class="btn-row">
+          <button type="button" id="share-copy" class="icon-btn">Copy</button>
+        </div>
+      </div>
+      <div class="share-art"><pre id="share-pre"></pre></div>
+    </div>
+    <span class="copy-flash" id="share-copy-flash">Copied!</span>
+  </div>
+
+  <section class="container-narrow" style="padding-top:0;">
+    <h2>Make your own</h2>
+    <p>Turn a photo into ASCII art with the <a href="/image-to-ascii">image to ASCII converter</a>, or type a banner with the <a href="/text-to-ascii">text to ASCII generator</a>. Both are free and run in your browser.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>© <span id="year"></span> inascii.com</div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<a href="https://erabb.it" class="erabbit-mark" aria-label="erabb.it"><img src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐇</text></svg>" width="10" height="10" alt=""></a>
+
+<script type="module" src="/assets/js/share-view.js"></script>
+</body>
+</html>

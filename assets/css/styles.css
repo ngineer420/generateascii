@@ -813,6 +813,63 @@ body.gallery-fullscreen { overflow: hidden; }
   white-space: nowrap;
 }
 
+/* ---------- share links (image tool) ----------
+   These rows set `display`, which outranks the hidden attribute, so each one hides itself. */
+.share-bar, .share-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 10px;
+}
+.share-bar[hidden], .share-result[hidden] { display: none; }
+.share-note { font-size: 12px; color: var(--text-faint); }
+.share-result input { flex: 1 1 220px; min-width: 0; width: auto; font-size: 13px; }
+.share-status { margin: 8px 0 0; font-size: 12.5px; color: var(--text-dim); }
+.share-status:empty { display: none; }
+
+.share-list-note { margin: 0 0 10px; font-size: 12.5px; color: var(--text-faint); }
+.share-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.share-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.share-item-main { display: flex; flex-direction: column; min-width: 0; }
+.share-item-main a { font-size: 13px; font-weight: 600; }
+.share-item-meta { font-size: 12px; color: var(--text-faint); }
+.share-item-actions { display: flex; gap: 8px; }
+.share-item button.is-armed { border-color: var(--danger); color: var(--danger); }
+#img-shares-older { margin-top: 10px; }
+
+/* ---------- share viewer (/s/) ---------- */
+.share-panel { position: relative; }
+.share-state { margin: 0; padding: 28px 4px; color: var(--text-dim); font-size: 14px; }
+.share-art {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  overflow: auto;     /* wide art scrolls here, never on the page body */
+  max-height: 80vh;   /* so the sideways scrollbar stays on screen for tall art */
+}
+.share-art pre {
+  margin: 0;
+  padding: 16px;
+  width: max-content;  /* keeps the right padding inside the scroll width */
+  min-width: 100%;
+  white-space: pre;
+  line-height: 1;
+  font-size: 12px;     /* share-view.js sets the size the tool drew at */
+  tab-size: 1;
+  color: var(--accent);
+}
+
 /* ---------- font landing pages (/fonts/) ---------- */
 .ascii-sample {
   background: var(--bg-inset);

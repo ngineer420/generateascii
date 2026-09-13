@@ -890,6 +890,7 @@
     let bgMode = "dark"; // "dark" | "light"
     let lastAsciiText = "";
     let lastGrid = null; // rendered cells of the current frame, for colour export
+    let lastColumns = 0; // width of lastAsciiText, for share links
     let lastImageDataUrl = null;
     let lastImageMeta = null;
 
@@ -994,6 +995,7 @@
       emptyMsg.style.display = "";
       outputWrap.classList.add("is-empty");
       lastAsciiText = "";
+      announceArt();
       lastImageDataUrl = null;
       lastImageMeta = null;
       persistImageState();
@@ -1280,7 +1282,9 @@
       const built = buildFrame(drawable);
       lastGrid = built.grid;
       lastAsciiText = built.text;
+      lastColumns = built.columns;
       drawCanvas(built.grid, built.columns, built.rows);
+      announceArt();
     }
 
     function drawCanvas(grid, columns, rows) {
@@ -1509,6 +1513,18 @@
         updateAnimBar();
       });
     }
+
+    /* ---- share links ----
+       assets/js/share.js is a module and cannot reach this closure, so the art travels by window
+       event: once per render, and again when share.js asks. It asks once when it boots, because
+       a restored session can render before the module has loaded. */
+
+    function announceArt() {
+      window.dispatchEvent(new CustomEvent("ga:image-art", {
+        detail: { text: lastAsciiText, columns: lastAsciiText ? lastColumns : 0 },
+      }));
+    }
+    window.addEventListener("ga:image-art-request", announceArt);
 
     /* ---- export ---- */
 

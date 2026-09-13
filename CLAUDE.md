@@ -175,6 +175,30 @@ persisted the same way.
 
 **Theme toggle** (`◐`) switches dark/light and persists. Dark is the default look.
 
+## Share links (sch3ma)
+
+Image art is too big for a URL, so the image tool stores it. **Create share link** writes one
+row to the `shares` collection on sch3ma (a hosted data API) and copies
+`https://inascii.com/s/?id=<row id>`. The text tool still shares through `?text=&font=`.
+
+- `assets/js/sch3ma.js` is the only file with the project id and the publishable key. While
+  they still hold the `PENDING` placeholders, the share bar, the list and the viewer stay
+  off, and the page requests nothing. `tools/sch3ma_setup.mjs` creates the collection and
+  prints the `sed` that fills both values. Run that sed on `assets/js/sch3ma.js` only.
+- `assets/js/share.js` is a module on both pages that mount the image panel. It gets the art
+  from `app.js` through the `ga:image-art` window event. `assets/js/share-view.js` renders
+  `/s/` and writes the art with `textContent` only, never `innerHTML`.
+- Rules: read `public`, create `authenticated`, delete `owner:visitor`, no update. The first
+  create mints an anonymous identity. `read: public` lets anyone read or list every share
+  through the API, and `privacy.html` says so. `visitor` is `visible: "owner:visitor"`, so its
+  owner can filter on it ("Your share links" lists server-side) and nobody else sees who made
+  a share.
+- `shares.art` has `maxLength: 300000` code points, and `ART_MAX` in `sch3ma.js` must match
+  it. Image height has no cap, so a tall image at a wide setting can go past it. The page
+  refuses that piece with a message before it sends a request.
+- `/s/` is `noindex`, stays out of `sitemap.xml`, and has no AdSense script, because its
+  content is user art that nobody moderates.
+
 ## Ads (Google AdSense — read the memory conventions)
 
 - **AdSense Auto ads only.** The single `<script>` for `ca-pub-7560786263587509` lives
