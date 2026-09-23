@@ -9,7 +9,7 @@
   --border-soft: #1a1e23;
   --text: #e6e8eb;
   --text-dim: #9aa4af;
-  --text-faint: #5b6570;
+  --text-faint: #73808d;
   --accent: #39ff88;
   --accent-dim: #1f9c53;
   --accent-contrast: #04170b;
@@ -29,7 +29,7 @@
   --border-soft: #e6e8e4;
   --text: #14181a;
   --text-dim: #4b5560;
-  --text-faint: #8a939c;
+  --text-faint: #646d76;
   --accent: #0f8a45;
   --accent-dim: #0c6e37;
   --accent-contrast: #f2fff6;
@@ -45,7 +45,7 @@
     --border-soft: #e6e8e4;
     --text: #14181a;
     --text-dim: #4b5560;
-    --text-faint: #8a939c;
+    --text-faint: #646d76;
     --accent: #0f8a45;
     --accent-dim: #0c6e37;
     --accent-contrast: #f2fff6;
@@ -776,6 +776,50 @@ body.gallery-fullscreen { overflow: hidden; }
 }
 .footer-links { display: flex; gap: 16px; flex-wrap: wrap; }
 .footer-links a { color: var(--text-dim); }
+
+/* Related tools: the sibling sites in this portfolio. It sits above the legal
+   line, in the footer's own type scale, so it reads as part of the footer. */
+.peer-sites {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 24px 20px 20px;
+  font-size: 12.5px;
+}
+.peer-sites-label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.peer-sites ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.peer-sites li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-width: 0;
+}
+.peer-sites a { color: var(--text-dim); }
+.peer-sites a:hover { color: var(--accent); }
+.peer-domain { color: var(--text-faint); font-size: 11px; }
+.peer-sites ~ .footer-inner {
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
+@media (max-width: 480px) {
+  .peer-sites ul { grid-template-columns: 1fr; }
+}
 
 .erabbit-mark { display: block; width: 10px; margin: 0 0 0 auto; line-height: 0; cursor: default; }
 .erabbit-mark img { display: block; width: 10px; height: 10px; }

@@ -185,10 +185,32 @@ def render_footernav(url):
     return "\n".join(out)
 
 
+def render_peers(url):
+    """Sibling sites in the portfolio, for the footer.
+
+    The same block on every page, so it takes `url` only to match the renderer
+    signature. `rel="noopener"` and no `target`: these are ordinary outbound
+    links and a new tab is the visitor's choice, not the footer's.
+    """
+    peers = getattr(D, "PEERS", None)
+    if not peers:
+        return ""
+    out = ['<nav class="peer-sites" aria-label="Related tools">',
+           '  <span class="peer-sites-label">Related tools</span>',
+           "  <ul>"]
+    for href, text, domain in peers:
+        out.append('    <li><a href="%s" rel="noopener">%s</a> '
+                   '<span class="peer-domain">%s</span></li>'
+                   % (esc(href), esc(text), esc(domain)))
+    out += ["  </ul>", "</nav>"]
+    return "\n".join(out)
+
+
 RENDERERS = {
     "nav": render_nav,
     "sizechips": render_sizechips,
     "footernav": render_footernav,
+    "peers": render_peers,
 }
 
 
