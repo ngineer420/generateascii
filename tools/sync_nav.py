@@ -185,24 +185,51 @@ def render_footernav(url):
     return "\n".join(out)
 
 
+# The one contact address for the whole portfolio. The `@` is written as the
+# HTML entity `&#64;` in both the href and the visible text. A browser decodes
+# the entity in an attribute value, so the mailto works for a mouse, a keyboard
+# and a screen reader, while a scraper that reads the raw HTML for `name@host`
+# finds nothing. Do not build this address in JavaScript: a link that needs JS
+# to work is worse than an address in plain text.
+CONTACT_ADDRESS = "hello&#64;goodbotbad.bot"
+CONTACT_PROMPT = "Questions or a problem with a tool?"
+
+
+def render_contact():
+    """The footer's contact line. One sentence and one real mailto link.
+
+    `nav_data.CONTACT_PROMPT` overrides the sentence, because a site that is
+    not a set of tools needs a different noun. The address never changes, so
+    this file stays copyable to every other site in the portfolio.
+    """
+    prompt = esc(getattr(D, "CONTACT_PROMPT", CONTACT_PROMPT))
+    return ('<p class="footer-contact">%s <a href="mailto:%s">%s</a></p>'
+            % (prompt, CONTACT_ADDRESS, CONTACT_ADDRESS))
+
+
 def render_peers(url):
-    """Sibling sites in the portfolio, for the footer.
+    """Sibling sites in the portfolio, and the contact line below them.
 
     The same block on every page, so it takes `url` only to match the renderer
     signature. `rel="noopener"` and no `target`: these are ordinary outbound
     links and a new tab is the visitor's choice, not the footer's.
+
+    The contact line rides in this region rather than in a region of its own.
+    One marked pair means one splice, so `build_font_pages.py` and the
+    hand-written pages pick up both halves of the footer from one function.
     """
+    out = []
     peers = getattr(D, "PEERS", None)
-    if not peers:
-        return ""
-    out = ['<nav class="peer-sites" aria-label="Related tools">',
-           '  <span class="peer-sites-label">Related tools</span>',
-           "  <ul>"]
-    for href, text, domain in peers:
-        out.append('    <li><a href="%s" rel="noopener">%s</a> '
-                   '<span class="peer-domain">%s</span></li>'
-                   % (esc(href), esc(text), esc(domain)))
-    out += ["  </ul>", "</nav>"]
+    if peers:
+        out += ['<nav class="peer-sites" aria-label="Related tools">',
+                '  <span class="peer-sites-label">Related tools</span>',
+                "  <ul>"]
+        for href, text, domain in peers:
+            out.append('    <li><a href="%s" rel="noopener">%s</a> '
+                       '<span class="peer-domain">%s</span></li>'
+                       % (esc(href), esc(text), esc(domain)))
+        out += ["  </ul>", "</nav>"]
+    out.append(render_contact())
     return "\n".join(out)
 
 
