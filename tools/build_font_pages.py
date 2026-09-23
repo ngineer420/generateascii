@@ -12,12 +12,12 @@ those files.
 What it writes, all under the repo root:
 
     fonts/index.html                              the index of all 59
-    fonts/<slug>/index.html + fonts/<slug>.html   one per font
+    fonts/<slug>/index.html                       one per font
     sitemap.xml                                   rebuilt to match what is on disk
 
-Every page exists at both `/fonts/<slug>/` and `/fonts/<slug>.html`, byte for
-byte identical, because every asset link is absolute. The canonical on both is
-the directory form.
+Each font page is published at one URL only, `/fonts/<slug>/`. That is the
+canonical form and the form sitemap.xml lists. The script also deletes a flat
+`fonts/<slug>.html` alias if it finds one, and `--check` reports it.
 
 The sample art is baked in as real text by tools/figfont.py, which is a port of
 the vendored figlet.js — see tools/check_figfont.py for the proof they agree.
@@ -210,9 +210,9 @@ FOOT = """
 
 {erabbit}
 
-<script src="/assets/js/figlet.min.js"></script>
-<script src="/assets/js/fonts-manifest.js"></script>
-<script src="/assets/js/font-page.js"></script>
+<script src="/assets/js/figlet.min.js" defer></script>
+<script src="/assets/js/fonts-manifest.js" defer></script>
+<script src="/assets/js/font-page.js" defer></script>
 </body>
 </html>
 """.format(erabbit=ERABBIT)
@@ -386,6 +386,16 @@ def write(path, text, check, stale):
         fh.write(text)
 
 
+def remove(path, check, stale):
+    """Delete a file this script used to write. Reported by --check."""
+    if not os.path.exists(path):
+        return
+    if check:
+        stale.append(os.path.relpath(path, ROOT) + " (should be deleted)")
+        return
+    os.remove(path)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--check", action="store_true",
@@ -416,8 +426,12 @@ def main():
                     if s["category"] == e["category"] and s["slug"] != e["slug"]][:6]
         page = font_page(fonts[e["name"]], e, siblings)
         write(os.path.join(OUT_DIR, e["slug"], "index.html"), page, args.check, stale)
-        # Flat alias: byte-identical, because every link in the page is absolute.
-        write(os.path.join(OUT_DIR, e["slug"] + ".html"), page, args.check, stale)
+        # The flat `fonts/<slug>.html` alias is gone. It was byte-identical to
+        # the directory page, it was never in sitemap.xml, and no page on the
+        # site ever linked to it: 59 files and ~584 KB that only a crawler
+        # following a guess could reach. The directory form is the canonical
+        # target and the only published one.
+        remove(os.path.join(OUT_DIR, e["slug"] + ".html"), args.check, stale)
 
     idx = index_page(entries, fonts)
     write(os.path.join(OUT_DIR, "index.html"), idx, args.check, stale)
@@ -434,7 +448,7 @@ def main():
         print("all generated files are up to date (%d fonts)" % len(entries))
         return 0
 
-    print("wrote %d font pages (x2 URL forms), the index, and sitemap.xml" % len(entries))
+    print("wrote %d font pages, the index, and sitemap.xml" % len(entries))
     return 0
 
 
