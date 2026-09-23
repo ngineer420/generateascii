@@ -185,14 +185,24 @@ def render_footernav(url):
     return "\n".join(out)
 
 
-# The one contact address for the whole portfolio. The `@` is written as the
-# HTML entity `&#64;` in both the href and the visible text. A browser decodes
-# the entity in an attribute value, so the mailto works for a mouse, a keyboard
-# and a screen reader, while a scraper that reads the raw HTML for `name@host`
-# finds nothing. Do not build this address in JavaScript: a link that needs JS
-# to work is worse than an address in plain text.
-CONTACT_ADDRESS = "hello&#64;goodbotbad.bot"
+# The one contact address for the whole portfolio.
+CONTACT_ADDRESS = "hello@goodbotbad.bot"
 CONTACT_PROMPT = "Questions or a problem with a tool?"
+
+
+def ncr(text):
+    """Every character as a decimal numeric character reference.
+
+    The HTML parser decodes these while it parses, so the `href` becomes a
+    real `mailto:` URL, the anchor keeps its tab order, and a screen reader
+    reads the plain address. Nothing here needs JavaScript, and a link that
+    needs JavaScript to work is worse than an address in plain text.
+
+    Encoding every character, not only the `@`, is what makes the raw bytes
+    carry neither `@` nor `mailto:hello`. A scraper regex over the source
+    finds no address to take.
+    """
+    return "".join("&#%d;" % ord(c) for c in text)
 
 
 def render_contact():
@@ -203,8 +213,8 @@ def render_contact():
     this file stays copyable to every other site in the portfolio.
     """
     prompt = esc(getattr(D, "CONTACT_PROMPT", CONTACT_PROMPT))
-    return ('<p class="footer-contact">%s <a href="mailto:%s">%s</a></p>'
-            % (prompt, CONTACT_ADDRESS, CONTACT_ADDRESS))
+    return ('<p class="footer-contact">%s <a href="%s">%s</a></p>'
+            % (prompt, ncr("mailto:" + CONTACT_ADDRESS), ncr(CONTACT_ADDRESS)))
 
 
 def render_peers(url):
