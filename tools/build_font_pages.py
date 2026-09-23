@@ -33,6 +33,7 @@ import html
 import json
 import os
 import re
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -395,14 +396,30 @@ def index_page(entries, fonts):
             + "\n".join(body) + FOOT)
 
 
-def lastmod(rel_path):
-    """The mtime of the file a URL serves, as YYYY-MM-DD.
+DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
-    Read at build time, after the generated pages are written, so a font page
-    regenerated today carries today's date. A crawler uses <lastmod> to decide
-    what to re-fetch, and a sitemap without one tells it nothing.
+
+def lastmod(rel_path):
+    """The day the file a URL serves last changed, as YYYY-MM-DD.
+
+    Taken from the file's last commit, not its mtime. Neither mtime reading is
+    the day the page changed: a fresh clone stamps every file with the clone
+    time, and a generator run rewrites every file it owns whether the content
+    moved or not. Both make --check disagree with the committed sitemap, and
+    both tell a crawler to re-fetch 59 pages that did not change.
+
+    mtime stays as the fallback for a tarball or an export with no git history.
     """
     path = os.path.join(ROOT, rel_path)
+    try:
+        out = subprocess.run(
+            ["git", "log", "-1", "--format=%ad", "--date=short", "--", rel_path],
+            cwd=ROOT, capture_output=True, text=True, timeout=20)
+        date = out.stdout.strip()
+        if out.returncode == 0 and DATE_RE.fullmatch(date):
+            return date
+    except (OSError, subprocess.SubprocessError):
+        pass
     return datetime.date.fromtimestamp(os.path.getmtime(path)).isoformat()
 
 
