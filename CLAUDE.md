@@ -16,9 +16,11 @@ GitHub Pages at inascii.com.
   a control in `index.html` almost always needs the same edit in the matching per-tool
   page.
 - `fonts/` — **generated, do not hand-edit.** One landing page per FIGlet font
-  (`fonts/<slug>/index.html` plus a byte-identical flat `fonts/<slug>.html`), and
-  an index at `fonts/index.html`. The index has no flat alias at the repo root:
-  it lives at `/fonts/` only. Everything under `fonts/`, plus
+  (`fonts/<slug>/index.html`), and an index at `fonts/index.html`. Each page has
+  one URL, `/fonts/<slug>/`. The flat `fonts/<slug>.html` alias is deleted: it
+  was byte-identical, absent from `sitemap.xml`, and linked from nowhere.
+  `build_font_pages.py` removes the alias again if it reappears. Everything
+  under `fonts/`, plus
   `sitemap.xml`, is written by `tools/build_font_pages.py` — change the template
   in that script and re-run it, never edit the output.
 - `tools/` — the page generator and its FIGlet engine (Python 3, stdlib only, not

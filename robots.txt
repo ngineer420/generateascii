@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+# The generator and its FIGlet engine. Not part of the site.
+Disallow: /tools/
 
 Sitemap: https://inascii.com/sitemap.xml
