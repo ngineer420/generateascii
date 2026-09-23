@@ -87,6 +87,17 @@ VARIANTS = {
 # is, so this renderer has nothing to add.
 FOOTER = []
 
+# Sibling sites in the portfolio, rendered into the footer of every page by the
+# `peers` region. The anchor text is each site's own meta description, so the
+# link says what the destination does and not just its domain. Four peers, not
+# nineteen: a footer that lists the whole portfolio reads as a link farm.
+PEERS = [
+    ("https://fontloom.com/", "Fancy text and Unicode fonts", "fontloom.com"),
+    ("https://textkitpro.com/", "Text cleanup, conversion and comparison", "textkitpro.com"),
+    ("https://devboxkit.com/", "JSON, Base64, hashes and dev tools", "devboxkit.com"),
+    ("https://qrmint.net/", "QR codes, generate and scan", "qrmint.net"),
+]
+
 # One-time --migrate: what the legacy markup looked like and where the marker
 # pairs go. Per-site, because the legacy markup is per-site. Ops run in order.
 # The generated pages never see these: build_font_pages.py writes the marked

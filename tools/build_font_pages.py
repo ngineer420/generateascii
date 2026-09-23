@@ -28,10 +28,12 @@ Standard library only. Python 3.8+.
 """
 
 import argparse
+import datetime
 import html
 import json
 import os
 import re
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -102,7 +104,24 @@ def pick_hero(font, name):
     return None
 
 
-def head(title, description, url, nav_url, ld_name, ld_description):
+def breadcrumb_ld(trail):
+    """A BreadcrumbList for a page below the root.
+
+    `trail` is an ordered list of (name, url) pairs starting at Home and ending
+    at the page itself, whose url is its own canonical. The root index has no
+    breadcrumb, so nothing here ever renders a one-item list.
+    """
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": i, "name": name, "item": item}
+            for i, (name, item) in enumerate(trail, start=1)
+        ],
+    }
+
+
+def head(title, description, url, nav_url, ld_name, ld_description, trail):
     ld = {
         "@context": "https://schema.org",
         "@type": "WebApplication",
@@ -144,6 +163,8 @@ def head(title, description, url, nav_url, ld_name, ld_description):
 {ld}
 </script>
 
+<script type="application/ld+json">{crumbs}</script>
+
 {ads}
 </head>
 <body>
@@ -168,7 +189,9 @@ def head(title, description, url, nav_url, ld_name, ld_description):
 """.format(title=esc(title), description=esc(description), url=url, site=SITE,
            theme=THEME_BOOTSTRAP, ads=ADSENSE,
            nav=sync_nav.render_nav(sync_nav.canon(nav_url)),
-           ld=json.dumps(ld, indent=2, ensure_ascii=False))
+           ld=json.dumps(ld, indent=2, ensure_ascii=False),
+           crumbs=json.dumps(breadcrumb_ld(trail), ensure_ascii=False,
+                             separators=(",", ":")))
 
 
 def font_switch(entry, siblings):
@@ -194,8 +217,18 @@ def font_switch(entry, siblings):
     return "\n".join(out)
 
 
+# The related-tools block, rendered by the same function the hand-written pages
+# get it from, and wrapped in the same marker pair, so `sync_nav.py --check`
+# reads the generated pages as current instead of rewriting them.
+PEERS_REGION = "\n".join(
+    ["  <!-- peers:start -->"]
+    + ["  " + ln if ln else ln for ln in sync_nav.render_peers("/").split("\n")]
+    + ["  <!-- peers:end -->"]
+)
+
 FOOT = """
 <footer class="site-footer">
+{peers}
   <div class="footer-inner">
     <div>© <span id="year"></span> inascii.com</div>
     <div class="footer-links">
@@ -215,7 +248,7 @@ FOOT = """
 <script src="/assets/js/font-page.js" defer></script>
 </body>
 </html>
-""".format(erabbit=ERABBIT)
+""".format(erabbit=ERABBIT, peers=PEERS_REGION)
 
 
 def font_page(font, entry, siblings):
@@ -296,9 +329,15 @@ def font_page(font, entry, siblings):
 
     body.append('</main>')
 
+    # Three items: the font pages sit under a real section hub at /fonts/.
+    trail = [("Home", SITE + "/"),
+             ("Font Gallery", SITE + "/fonts/"),
+             ("%s ASCII Art Generator" % name, url)]
+
     return (head(title, description, url, "/fonts/%s/" % slug,
                  "%s ASCII Art Generator" % name,
-                 "Free browser-based ASCII art generator using the %s FIGlet font." % name)
+                 "Free browser-based ASCII art generator using the %s FIGlet font." % name,
+                 trail)
             + "\n".join(body) + FOOT)
 
 
@@ -347,29 +386,62 @@ def index_page(entries, fonts):
   </section>''')
     body.append('</main>')
 
+    # Two items: this page is the section hub itself.
+    trail = [("Home", SITE + "/"), ("Font Gallery", url)]
+
     return (head(title, description, url, "/fonts/",
                  "ASCII Art Font Gallery",
-                 "Browse all 59 FIGlet fonts available on inascii.com, each with a live preview.")
+                 "Browse all 59 FIGlet fonts available on inascii.com, each with a live preview.",
+                 trail)
             + "\n".join(body) + FOOT)
 
 
+DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def lastmod(rel_path):
+    """The day the file a URL serves last changed, as YYYY-MM-DD.
+
+    Taken from the file's last commit, not its mtime. Neither mtime reading is
+    the day the page changed: a fresh clone stamps every file with the clone
+    time, and a generator run rewrites every file it owns whether the content
+    moved or not. Both make --check disagree with the committed sitemap, and
+    both tell a crawler to re-fetch 59 pages that did not change.
+
+    mtime stays as the fallback for a tarball or an export with no git history.
+    """
+    path = os.path.join(ROOT, rel_path)
+    try:
+        out = subprocess.run(
+            ["git", "log", "-1", "--format=%ad", "--date=short", "--", rel_path],
+            cwd=ROOT, capture_output=True, text=True, timeout=20)
+        date = out.stdout.strip()
+        if out.returncode == 0 and DATE_RE.fullmatch(date):
+            return date
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return datetime.date.fromtimestamp(os.path.getmtime(path)).isoformat()
+
+
 def sitemap(entries):
-    rows = [('/', 'weekly', '1.0'),
-            ('/text-to-ascii', 'monthly', '0.8'),
-            ('/image-to-ascii', 'monthly', '0.8'),
-            ('/fonts/', 'monthly', '0.8')]
+    rows = [('/', 'index.html', 'weekly', '1.0'),
+            ('/text-to-ascii', 'text-to-ascii.html', 'monthly', '0.8'),
+            ('/image-to-ascii', 'image-to-ascii.html', 'monthly', '0.8'),
+            ('/fonts/', 'fonts/index.html', 'monthly', '0.8')]
     for e in entries:
-        rows.append(('/fonts/%s/' % e["slug"], 'monthly', '0.6'))
+        rows.append(('/fonts/%s/' % e["slug"],
+                     'fonts/%s/index.html' % e["slug"], 'monthly', '0.6'))
     for a in ["history-of-ascii-art", "how-text-to-ascii-generators-work",
               "where-ascii-art-lives-today", "why-we-built-this-generator"]:
-        rows.append(('/articles/%s.html' % a, 'yearly', '0.5'))
-    rows.append(('/privacy.html', 'yearly', '0.2'))
-    rows.append(('/terms.html', 'yearly', '0.2'))
+        rows.append(('/articles/%s.html' % a, 'articles/%s.html' % a, 'yearly', '0.5'))
+    rows.append(('/privacy.html', 'privacy.html', 'yearly', '0.2'))
+    rows.append(('/terms.html', 'terms.html', 'yearly', '0.2'))
 
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
-    for loc, freq, prio in rows:
+    for loc, src, freq, prio in rows:
         out += ['  <url>', '    <loc>%s%s</loc>' % (SITE, loc),
+                '    <lastmod>%s</lastmod>' % lastmod(src),
                 '    <changefreq>%s</changefreq>' % freq,
                 '    <priority>%s</priority>' % prio, '  </url>']
     out.append('</urlset>')
