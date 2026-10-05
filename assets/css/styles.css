@@ -821,6 +821,27 @@ body.gallery-fullscreen { overflow: hidden; }
   .peer-sites ul { grid-template-columns: 1fr; }
 }
 
+/* ---------- footer contact ---------- */
+/* Same width and gutter as the related-tools block above it, so the footer
+   reads as one column rather than as two stacked widgets. The related-tools
+   block already pays the bottom padding, so this line only closes the gap.
+   The sentence is faint and the address is not: the address is the part
+   somebody scans for. */
+.peer-sites + .footer-contact { margin-top: -8px; }
+.footer-contact {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 20px 10px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+.footer-contact a { color: var(--text-dim); }
+.footer-contact a:hover { color: var(--accent); }
+/* A phone needs a real tap target. */
+@media (max-width: 480px) {
+  .footer-contact a { display: inline-block; padding: 6px 0; }
+}
+
 .erabbit-mark { display: block; width: 10px; margin: 0 0 0 auto; line-height: 0; cursor: default; }
 .erabbit-mark img { display: block; width: 10px; height: 10px; }
 
