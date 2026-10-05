@@ -398,6 +398,71 @@ def index_page(entries, fonts):
 
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
+_UNSCANNED = object()
+_DIRTY = _UNSCANNED
+
+
+def scan_dirty():
+    """Every path git reports as changed, staged or untracked. One call.
+
+    `git status --porcelain -z` answers for the whole repo, so this runs once
+    and every sitemap row reads the answer out of a set. A per-file call would
+    be 66 processes for one fact.
+
+    The result is a pair: the exact paths, and the prefixes of the untracked
+    directories, because git collapses an untracked directory into one entry
+    that ends in a slash. `None` means git could not answer at all.
+    """
+    try:
+        out = subprocess.run(["git", "status", "--porcelain", "-z"],
+                             cwd=ROOT, capture_output=True, text=True, timeout=20)
+        if out.returncode != 0:
+            return None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+    paths, prefixes = set(), []
+    fields = out.stdout.split("\0")
+    i = 0
+    while i < len(fields):
+        entry = fields[i]
+        i += 1
+        if len(entry) < 4:
+            continue
+        code, name = entry[:2], entry[3:]
+        names = [name]
+        # A rename or a copy carries a second path in the next field. Both the
+        # source and the destination count as dirty: the destination holds the
+        # new content, and the source no longer exists at its committed date.
+        if "R" in code or "C" in code:
+            if i < len(fields):
+                names.append(fields[i])
+                i += 1
+        for n in names:
+            if n.endswith("/"):
+                prefixes.append(n)
+            elif n:
+                paths.add(n)
+    return paths, prefixes
+
+
+def dirty_index():
+    global _DIRTY
+    if _DIRTY is _UNSCANNED:
+        _DIRTY = scan_dirty()
+    return _DIRTY
+
+
+def is_dirty(rel_path):
+    """True when the working tree copy of `rel_path` differs from HEAD."""
+    index = dirty_index()
+    if index is None:
+        return False
+    paths, prefixes = index
+    if rel_path in paths:
+        return True
+    return any(rel_path.startswith(p) for p in prefixes)
+
 
 def lastmod(rel_path):
     """The day the file a URL serves last changed, as YYYY-MM-DD.
@@ -408,9 +473,18 @@ def lastmod(rel_path):
     moved or not. Both make --check disagree with the committed sitemap, and
     both tell a crawler to re-fetch 59 pages that did not change.
 
+    A dirty file gets today instead. The build writes the sitemap before the
+    commit lands, so the last commit of a page you just edited is the previous
+    one, and the sitemap would record a date the page has already left behind.
+    The moment the commit lands, that page's last commit is today, and the
+    committed sitemap already says today. The two agree and --check passes on
+    a clean tree.
+
     mtime stays as the fallback for a tarball or an export with no git history.
     """
     path = os.path.join(ROOT, rel_path)
+    if is_dirty(rel_path):
+        return datetime.date.today().isoformat()
     try:
         out = subprocess.run(
             ["git", "log", "-1", "--format=%ad", "--date=short", "--", rel_path],
