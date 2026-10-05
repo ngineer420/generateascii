@@ -89,13 +89,11 @@ FOOTER = []
 
 # Sibling sites in the portfolio, rendered into the footer of every page by the
 # `peers` region. The anchor text is each site's own meta description, so the
-# link says what the destination does and not just its domain. Four peers, not
+# link says what the destination does and not just its domain. Two peers, not
 # nineteen: a footer that lists the whole portfolio reads as a link farm.
 PEERS = [
     ("https://fontloom.com/", "Fancy text and Unicode fonts", "fontloom.com"),
     ("https://textkitpro.com/", "Text cleanup, conversion and comparison", "textkitpro.com"),
-    ("https://devboxkit.com/", "JSON, Base64, hashes and dev tools", "devboxkit.com"),
-    ("https://qrmint.net/", "QR codes, generate and scan", "qrmint.net"),
 ]
 
 # One-time --migrate: what the legacy markup looked like and where the marker
